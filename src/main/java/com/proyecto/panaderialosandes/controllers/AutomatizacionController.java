@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,29 +14,54 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.proyecto.panaderialosandes.models.EventoAutomatizacion;
 import com.proyecto.panaderialosandes.services.automatizacion.AutomatizacionService;
+import com.proyecto.panaderialosandes.services.automatizacion.HistorialAutomatizaciones;
 import com.proyecto.panaderialosandes.services.automatizacion.TipoAutomatizacion;
 
 @Controller
 public class AutomatizacionController {
 
     private final AutomatizacionService automatizacionService;
+    private final HistorialAutomatizaciones historial;
     private final String apiKey;
 
-    public AutomatizacionController(AutomatizacionService automatizacionService,
+    public AutomatizacionController(AutomatizacionService automatizacionService, HistorialAutomatizaciones historial,
             @Value("${app.automatizacion.api-key:}") String apiKey) {
         this.automatizacionService = automatizacionService;
+        this.historial = historial;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
     }
 
-    @GetMapping("/principal/automatizaciones") // localhost:8081/principal/automatizaciones (solo ADMIN)
-    public String mostrar(Model model) {
+    // pantalla de automatizaciones (solo ADMIN). El historial se filtra por automatizacion, estado y periodo,
+    // y se pagina (5, 10, 20 o 50 filas)
+    @GetMapping("/principal/automatizaciones") // localhost:8081/principal/automatizaciones
+    public String mostrar(Model model,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String periodo,
+            @RequestParam(required = false) Integer tamano,
+            @RequestParam(required = false) Integer pagina) {
+        HistorialAutomatizaciones.Filtros filtros = HistorialAutomatizaciones.Filtros.normalizar(tipo, estado, periodo, tamano, pagina);
+        Page<EventoAutomatizacion> eventos = historial.buscar(filtros);
         model.addAttribute("tipos", TipoAutomatizacion.values());
-        model.addAttribute("eventos", automatizacionService.recientes());
+        model.addAttribute("horarios", java.util.Arrays.stream(TipoAutomatizacion.values())
+                .filter(t -> historial.horario(t) != null)
+                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, historial::horario)));
+        model.addAttribute("ultimas", historial.ultimas());
+        model.addAttribute("nombresTipos", java.util.Arrays.stream(TipoAutomatizacion.values())
+                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, TipoAutomatizacion::getNombre)));
+        model.addAttribute("iconosTipos", java.util.Arrays.stream(TipoAutomatizacion.values())
+                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, TipoAutomatizacion::getIcono)));
+        model.addAttribute("indicadores", historial.indicadores());
+        model.addAttribute("eventos", eventos);
+        model.addAttribute("filtros", filtros);
+        model.addAttribute("contadores", historial.contadores(filtros));
+        model.addAttribute("tamanos", HistorialAutomatizaciones.TAMANOS);
         model.addAttribute("webhookConfigurado", automatizacionService.webhookConfigurado());
         model.addAttribute("apiKeyConfigurada", !apiKey.isEmpty());
         return "vista/automatizaciones";
