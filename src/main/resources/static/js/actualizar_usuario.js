@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const botonesEditar = document.querySelectorAll('[id^="btnEditar-"]')
     const btnGuardar = document.getElementById("btnGuardar");
 
+    // este bloque solo aplica a la lista de usuarios (modal de edicion)
+    if (!btnGuardar || !nombreUsuario) return;
+
     btnGuardar.addEventListener('click', guardarCambios);
 
     // Función para manejar el clic
@@ -84,6 +87,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const icon = document.getElementById("iconPassword");
     const toggleBtn = document.getElementById("togglePassword");
 
+    // este bloque solo aplica al formulario de nuevo usuario
+    if (!passwordInput || !toggleBtn) return;
+
     const requirements = {
         length: document.getElementById("length"),
         uppercase: document.getElementById("uppercase"),
@@ -125,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Validar al enviar
-    const form = document.querySelector("form");
+    const form = passwordInput.form;
     form.addEventListener("submit", function (event) {
         const value = passwordInput.value;
         for (let key in regex) {

@@ -4,160 +4,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.:: Lista de Usuarios ::.</title>
-    <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css}" rel="stylesheet">
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js}"></script>
-    <link th:href="@{/css/usuarios.css}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/header.css}">
+    <title>Usuarios · Panadería Los Andes</title>
+    <th:block th:replace="~{componentes/head :: recursos}"></th:block>
+    <style>
+        .avatar-fila { width: 34px; height: 34px; border-radius: 50%; background: var(--beige); color: var(--cafe-oscuro);
+            display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: .8rem; }
+    </style>
 </head>
 
 <body>
     <div th:replace="~{componentes/header :: miCabecera}"></div>
 
-    <div class="container mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1><i class="fas fa-users me-2"></i>Lista de Usuarios</h1>
-            <a th:href="@{/login/nuevo}" class="btn btn-primary">
-                <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
+    <main class="contenido">
+        <div class="encabezado">
+            <div>
+                <h1>Usuarios</h1>
+                <p>Personas con acceso al sistema y su rol</p>
+            </div>
+            <a th:href="@{/login/nuevo}" class="btn btn-marca">
+                <i class="fas fa-user-plus me-2"></i>Nuevo usuario
             </a>
         </div>
 
-        <div class="card shadow">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Usuario</th>
-                                <th>Rol</th>
-                                <th class="text-center">Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="usuario : ${usuarios}">
-                                <td th:text="${usuario.id}"></td>
-                                <td th:text="${usuario.nombre}"></td>
-                                <td th:text="${usuario.username}"></td>
-                                <td>
-                                    <span class="badge bg-info text-dark" th:text="${usuario.rol}"></span>
-                                </td>
-                                <td>
-                                    <form th:action="@{/principal/cambiar_estado}" method="post" th:object="${usuario}"
-                                        class="d-inline">
-                                        <input type="hidden" name="id" th:value="${usuario.id}">
-                                        <!-- Añade CSRF Token para Spring Security -->
-                                        <input type="hidden">
-
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" role="switch"
-                                                th:checked="${usuario.estado == 'activo'}"
-                                                id="|estadoSwitch-${usuario.id}|" onchange="cambiarEstado(this)">
-                                            <label class="form-check-label" th:for="|estadoSwitch-${usuario.id}|">
-                                                <span th:text="${usuario.estado == 'activo' ? 'Activo' : 'Inactivo'}"
-                                                    th:class="${usuario.estado == 'activo' ? 'text-success' : 'text-danger'}"></span>
-                                            </label>
-                                        </div>
-                                    </form>
-                                </td>
-
-                                <td>
-                                    <a type="button" data-bs-toggle="modal" data-bs-target="#exampleModal"
-                                        class="btn btn-sm btn-warning me-2" th:id="'btnEditar-' + ${usuario.id}"
-                                        th:attr="data-id=${usuario.id}">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-
-                                    <!-- Venta Modal para editar usuario -->
-                                    <div class="modal fade mt-5 pt-3" id="exampleModal" tabindex="-1"
-                                        aria-labelledby="exampleModalLabel" aria-hidden="true">
-                                        <div class="modal-dialog" style="background-color: rgb(145, 145, 12);">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Actualizar Datos
-                                                        del
-                                                        Usuario</h1>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form>
-                                                        <div class="mb-3 mt-3">
-                                                            <label class="form-label fw-bold">Nombre Completo:</label>
-                                                            <input type="text"
-                                                                class="form-control bg-primary text-white"
-                                                                id="nombreEditar" name="nombre"
-                                                                placeholder="Ingrese nombre completo" autocomplete="off"
-                                                                required>
-                                                        </div>
-
-                                                        <div class="mb-3 mt-3">
-                                                            <label class="form-label fw-bold">Nombre de Usuario:</label>
-                                                            <input type="text"
-                                                                class="form-control bg-primary text-white"
-                                                                id="usernameEditar" name="username"
-                                                                placeholder="Ingrese nombre de usuario"
-                                                                autocomplete="off" required>
-                                                        </div>
-
-                                                        <div class="mb-3 mt-3">
-                                                            <label class="form-label fw-bold">Rol:</label>
-                                                            <select class="form-control" id="rolEditar" name="rol">
-                                                                <option value="admin">Admin</option>
-                                                                <option value="vendedor">Vendedor</option>
-                                                            </select>
-                                                        </div>
-
-                                                    </form>
-                                                    <p th:if="${error}" th:text="${error}" class="mb-0 mt-3"
-                                                        style="color: red;"></p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Close</button>
-                                                    <button id="btnGuardar" type="button"
-                                                        class="btn btn-primary">Guardar Cambios</button>
-                                                </div>
-                                            </div>
-                                        </div>
+        <div class="tarjeta">
+            <div class="table-responsive">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Usuario</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="usuario : ${usuarios}">
+                            <td class="leyenda" th:text="${usuario.id}"></td>
+                            <td>
+                                <span class="avatar-fila me-2" th:text="${#strings.toUpperCase(#strings.substring(usuario.nombre + '?', 0, 1))}">A</span>
+                                <strong th:text="${usuario.nombre}"></strong>
+                            </td>
+                            <td th:text="${usuario.username}"></td>
+                            <td>
+                                <span class="estado" th:classappend="${#strings.equalsIgnoreCase(usuario.rol, 'admin')} ? 'e-info' : 'e-neutro'"
+                                    th:text="${#strings.toUpperCase(usuario.rol)}"></span>
+                            </td>
+                            <td>
+                                <form th:action="@{/principal/cambiar_estado}" method="post" class="d-inline">
+                                    <input type="hidden" name="id" th:value="${usuario.id}">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch"
+                                            th:checked="${usuario.estado == 'activo'}"
+                                            th:id="|estadoSwitch-${usuario.id}|" onchange="cambiarEstado(this)">
+                                        <label class="form-check-label small fw-bold" th:for="|estadoSwitch-${usuario.id}|">
+                                            <span th:text="${usuario.estado == 'activo' ? 'Activo' : 'Inactivo'}"
+                                                th:class="${usuario.estado == 'activo' ? 'text-success' : 'text-danger'}"></span>
+                                        </label>
                                     </div>
+                                </form>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a type="button" data-bs-toggle="modal" data-bs-target="#exampleModal"
+                                    class="btn btn-icono" th:id="'btnEditar-' + ${usuario.id}"
+                                    th:attr="data-id=${usuario.id}" title="Editar">
+                                    <i class="fas fa-pen"></i>
+                                </a>
+                                <form th:action="@{/login/eliminar-usuario/{id}(id=${usuario.id})}" method="post"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-icono text-danger" title="Eliminar"
+                                        onclick="return confirm('¿Está seguro de eliminar este usuario?')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(usuarios)}">
+                            <td colspan="6"><div class="vacio"><i class="fas fa-users"></i>No hay usuarios registrados</div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pie-tabla" th:unless="${#lists.isEmpty(usuarios)}">
+                <span th:text="${#lists.size(usuarios) + ' usuarios'}"></span>
+                <span>El rol ADMIN ve reportes, usuarios y automatizaciones; VENDEDOR solo la operación diaria</span>
+            </div>
+        </div>
+    </main>
 
-                                    <form th:action="@{/login/eliminar-usuario/{id}(id=${usuario.id})}" method="post"
-                                        class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-danger"
-                                            onclick="return confirm('¿Está seguro de eliminar este usuario?')">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(usuarios)}">
-                                <td colspan="6" class="text-center text-muted py-4">No hay usuarios registrados</td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <!-- modal para editar el usuario (uno solo, lo llena actualizar_usuario.js) -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="exampleModalLabel">Actualizar usuario</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label" for="nombreEditar">Nombre completo</label>
+                            <input type="text" class="form-control" id="nombreEditar" name="nombre"
+                                placeholder="Nombre completo" autocomplete="off" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="usernameEditar">Nombre de usuario</label>
+                            <input type="text" class="form-control" id="usernameEditar" name="username"
+                                placeholder="Nombre de usuario" autocomplete="off" required>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label" for="rolEditar">Rol</label>
+                            <select class="form-select" id="rolEditar" name="rol">
+                                <option value="admin">Admin</option>
+                                <option value="vendedor">Vendedor</option>
+                            </select>
+                        </div>
+                    </form>
+                    <p th:if="${error}" th:text="${error}" class="alerta-marca error mb-0 mt-3"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-contorno" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnGuardar" type="button" class="btn btn-marca">Guardar cambios</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js}"></script>
     <script th:src="@{/js/actualizar_usuario.js}" defer></script>
-
     <script>
         function cambiarEstado(checkbox) {
-            // Agrega un campo oculto con el nuevo estado
+            // agrega un campo oculto con el nuevo estado y envia el formulario
             const form = checkbox.form;
             const estadoInput = document.createElement('input');
             estadoInput.type = 'hidden';
             estadoInput.name = 'nuevoEstado';
             estadoInput.value = checkbox.checked ? 'activo' : 'inactivo';
             form.appendChild(estadoInput);
-
-            // Envía el formulario
             form.submit();
         }
     </script>

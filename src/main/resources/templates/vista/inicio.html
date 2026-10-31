@@ -3,31 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.:: Inicio ::.</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css}" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js}" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
-    <link th:href="@{/css/inicio.css}" rel="stylesheet">
-
+    <title>Panadería Los Andes</title>
+    <th:block th:replace="~{componentes/head :: recursos}"></th:block>
+    <style>
+        .portada { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; text-align: center; color: #fff;
+            background: linear-gradient(rgba(59,37,18,.72), rgba(59,37,18,.82)), url('/imagenes/panaderia-fondo.jpg') center/cover; }
+        .portada img { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 4px solid var(--trigo); margin-bottom: 18px; }
+        .portada h1 { font-weight: 900; font-size: clamp(2rem, 6vw, 3.4rem); }
+        .portada p { color: var(--beige); max-width: 520px; margin: 0 auto 26px; }
+    </style>
 </head>
-
 <body>
-
-    <div class="container d-flex justify-content-center align-items-center vh-100 flex-column">
-        <img class="img-logo" th:src="@{/imagenes/logo-de-la-panaderia.png}" alt="">
-        
-        <div class="row vh-50">
-            
-            <div class="menu-central col-md-12 text-center ">
-                <h1 class="text-white display-1">Bienvenido a la pagina Inicio</h1>
-                <h2 class="text-white display-5">Panaderia Pasteleria Los Andes</h2>
-                <p class="text-white">Para poder acceder a la pagina principal, debes iniciar sesion</p>
-                <a th:href="@{/login}" class="btn btn-primary">Iniciar Sesion</a>
+    <div class="portada">
+        <div>
+            <img th:src="@{/imagenes/logo-de-la-panaderia.png}" alt="Panadería Los Andes">
+            <h1>Panadería Pastelería Los Andes</h1>
+            <p>Sistema de gestión de ventas, inventario y tienda. Inicia sesión para acceder al panel.</p>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a th:href="@{/login}" class="btn btn-trigo btn-lg px-4"><i class="fas fa-right-to-bracket me-2"></i>Iniciar sesión</a>
+                <a th:href="@{/catalogo}" class="btn btn-outline-light btn-lg px-4"><i class="fas fa-cube me-2"></i>Ver catálogo 3D</a>
             </div>
         </div>
     </div>
-
-    <script th:src="@{https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js}" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.min.js}" integrity="sha384-RuyvpeZCxMJCqVUGFI0Do1mQrods/hhxYlcVfGPOfQtPJh0JCw12tUAZ/Mv10S7D" crossorigin="anonymous"></script>
 </body>
 </html>
