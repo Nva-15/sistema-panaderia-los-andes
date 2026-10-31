@@ -1,6 +1,8 @@
 package com.proyecto.panaderialosandes.config;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
@@ -56,5 +58,15 @@ class SeguridadTest {
     void administradorPuedeVerUsuarios() throws Exception {
         mockMvc.perform(get("/login/dataUsuarios").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void recordarmeGuardaLaCookieDeSesion() throws Exception {
+        mockMvc.perform(post("/login").param("username", "admin").param("password", "Admin123!").param("recordarme", "on"))
+                .andExpect(redirectedUrl("/principal/inicio"))
+                .andExpect(cookie().exists("remember-me"));
+        mockMvc.perform(post("/login").param("username", "admin").param("password", "Admin123!"))
+                .andExpect(redirectedUrl("/principal/inicio"))
+                .andExpect(cookie().doesNotExist("remember-me"));
     }
 }

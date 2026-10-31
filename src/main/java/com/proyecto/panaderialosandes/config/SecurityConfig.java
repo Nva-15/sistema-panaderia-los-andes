@@ -1,5 +1,6 @@
 package com.proyecto.panaderialosandes.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    // clave con la que se firma la cookie de "Recordarme" (en Render se puede definir RECORDARME_CLAVE)
+    @Value("${app.seguridad.recordarme-clave:panaderia-los-andes-recordarme}")
+    private String claveRecordarme;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,6 +41,12 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .defaultSuccessUrl("/principal/inicio", true)
                 .permitAll()
+            )
+            // casilla "Recordarme" del login: mantiene la sesion 7 dias en ese navegador
+            .rememberMe(recordar -> recordar
+                .key(claveRecordarme)
+                .rememberMeParameter("recordarme")
+                .tokenValiditySeconds(7 * 24 * 60 * 60)
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")
