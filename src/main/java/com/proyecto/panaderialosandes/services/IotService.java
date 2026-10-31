@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import com.proyecto.panaderialosandes.models.LecturaSensor;
 import com.proyecto.panaderialosandes.models.VariableIoT;
 import com.proyecto.panaderialosandes.repositorios.AlertaIoTRepository;
 import com.proyecto.panaderialosandes.repositorios.LecturaSensorRepository;
+import com.proyecto.panaderialosandes.services.automatizacion.EventosNegocio;
 
 // recibe la telemetria y las alertas del ESP32 (por MQTT o HTTP), las guarda y arma los datos del dashboard
 @Service
@@ -47,14 +49,17 @@ public class IotService {
 
     private final LecturaSensorRepository lecturaRepository;
     private final AlertaIoTRepository alertaRepository;
+    private final ApplicationEventPublisher eventos;
     private final int diasRetencion;
     private final Duration intervaloGuardado;
 
     public IotService(LecturaSensorRepository lecturaRepository, AlertaIoTRepository alertaRepository,
+            ApplicationEventPublisher eventos,
             @Value("${app.iot.dias-retencion:30}") int diasRetencion,
             @Value("${app.iot.segundos-entre-guardados:30}") int segundosEntreGuardados) {
         this.lecturaRepository = lecturaRepository;
         this.alertaRepository = alertaRepository;
+        this.eventos = eventos;
         this.diasRetencion = diasRetencion;
         this.intervaloGuardado = Duration.ofSeconds(segundosEntreGuardados);
     }
@@ -115,6 +120,8 @@ public class IotService {
         alerta.setFechaHora(fecha);
         alertaRepository.save(alerta);
         logger.warn("Alerta IoT [{}] {}: {}", alerta.getPrioridad(), tipoAlerta, alerta.getMensaje());
+        // dispara la automatizacion que reenvia la alerta (Avance 4)
+        eventos.publishEvent(new EventosNegocio.AlertaIoTRegistrada(alerta));
         return true;
     }
 
@@ -201,6 +208,13 @@ public class IotService {
         resultado.put("alertas_pendientes", alertaRepository.findByAtendidaFalseOrderByFechaHoraDesc().stream()
                 .limit(10).map(this::alertaComoMapa).toList());
         return resultado;
+    }
+
+    // alertas registradas hoy (para el reporte de cierre diario)
+    public List<Map<String, Object>> alertasDelDia() {
+        LocalDateTime inicioDelDia = ahora().toLocalDate().atStartOfDay();
+        return alertaRepository.findByFechaHoraAfterOrderByFechaHoraDesc(inicioDelDia).stream()
+                .map(this::alertaComoMapa).toList();
     }
 
     @Transactional

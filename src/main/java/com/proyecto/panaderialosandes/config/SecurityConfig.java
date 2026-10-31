@@ -20,6 +20,9 @@ public class SecurityConfig {
                 .requestMatchers("/principal","/login", "/css/**", "/js/**", "/imagenes/**").permitAll()
                 // entrada HTTP alternativa del ESP32 (sin sesion); el controlador valida la cabecera X-API-KEY
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/iot/telemetria", "/api/iot/alertas").permitAll()
+                // automatizaciones programadas (GitHub Actions); el controlador valida la cabecera X-API-KEY
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/automatizaciones/*/ejecutar").permitAll()
+                .requestMatchers("/principal/automatizaciones", "/principal/automatizaciones/**").hasRole("ADMIN")
                 .requestMatchers( "/principal/venta", "/principal/productos","/productos/buscar").hasAnyRole("ADMIN", "VENDEDOR")
                 .requestMatchers("/login/nuevo","/principal/listar_usuarios", "/principal/reporte**","/api/reporte-ventas/**","/productos/**").hasRole("ADMIN")
                 // administracion de usuarios y reportes: solo ADMIN

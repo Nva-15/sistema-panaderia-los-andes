@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,7 @@ import com.proyecto.panaderialosandes.services.ClienteService;
 import com.proyecto.panaderialosandes.services.DetalleVentaService;
 import com.proyecto.panaderialosandes.services.ProductoService;
 import com.proyecto.panaderialosandes.services.VentasServices;
+import com.proyecto.panaderialosandes.services.automatizacion.EventosNegocio;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -50,6 +52,12 @@ public class VentasController {
 
     @Autowired
     private DetalleVentaService detalleVentaService;
+
+    @Autowired
+    private ApplicationEventPublisher eventos;
+
+    // con esta cantidad o menos se considera stock bajo (igual que en el reporte de inventario)
+    private static final int STOCK_MINIMO = 10;
 
     @GetMapping("/datosventas")
     @ResponseBody
@@ -121,8 +129,13 @@ public class VentasController {
             DetalleVentas detalles = new DetalleVentas();
             //obtenemos el producto
             Productos producto = productoService.obtenerProductoPorId(det.getProducto_id().getId()).orElseThrow(()-> new RuntimeException("Producto no encontrado"));
-            producto.setCantidad(producto.getCantidad() - det.getCantidad());
+            int stockAnterior = producto.getCantidad();
+            producto.setCantidad(stockAnterior - det.getCantidad());
             productoService.guardarProducto(producto);
+            // avisa solo cuando la venta hace que el producto cruce el minimo (no en cada venta posterior)
+            if (stockAnterior > STOCK_MINIMO && producto.getCantidad() <= STOCK_MINIMO) {
+                eventos.publishEvent(new EventosNegocio.StockBajo(producto.getNombre(), producto.getCantidad(), producto.getUnidad()));
+            }
             detalles.setCantidad(det.getCantidad());
             detalles.setSubtotal(det.getSubtotal());
             detalles.setProducto_id(producto);
