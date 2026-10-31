@@ -49,7 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!esAccion) {
             historial.push({ rol: 'usuario', texto: texto });
         }
-        const cargando = agregarMensaje('asistente', '<i class="fas fa-spinner fa-spin me-2"></i>Consultando el sistema...', true);
+        const cargando = agregarMensaje('asistente', '<i class="fas fa-spinner fa-spin me-2"></i><span class="estado">Consultando el sistema...</span>', true);
+        // contador de segundos para que el usuario vea que la consulta sigue en proceso
+        const estado = cargando.querySelector('.estado');
+        const inicio = Date.now();
+        const temporizador = setInterval(() => {
+            const segundos = Math.round((Date.now() - inicio) / 1000);
+            estado.textContent = (segundos < 8 ? 'Consultando el sistema... ' : 'Analizando los datos... ') + segundos + ' s';
+        }, 1000);
 
         try {
             const response = await fetch('/api/asistente/chat', {
@@ -84,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
             agregarMensaje('error', 'No se pudo conectar con el servidor.');
             if (!esAccion) historial.pop();
         } finally {
+            clearInterval(temporizador);
             ocupado = false;
             btnEnviar.disabled = false;
             inputPregunta.focus();

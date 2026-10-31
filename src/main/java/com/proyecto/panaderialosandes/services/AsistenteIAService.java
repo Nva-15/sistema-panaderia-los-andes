@@ -3,6 +3,7 @@ package com.proyecto.panaderialosandes.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.HttpOptions;
 import com.google.genai.types.Part;
+import com.google.genai.types.ThinkingConfig;
 import com.google.genai.types.Tool;
 import com.proyecto.panaderialosandes.dto.AsistenteDto;
 import com.proyecto.panaderialosandes.services.PromptsAsistente.Modo;
@@ -40,14 +42,19 @@ public class AsistenteIAService {
     private final ObjectMapper objectMapper;
     private final Client cliente;
     private final String modelo;
+    private final String nivelRazonamiento;
+    // si el modelo configurado no acepta el nivel de razonamiento, se deja de enviar
+    private final AtomicBoolean razonamientoSoportado = new AtomicBoolean(true);
 
     public AsistenteIAService(HerramientasAsistente herramientas, ObjectMapper objectMapper,
             @Value("${app.ia.api-key:}") String apiKey,
             @Value("${app.ia.modelo:gemini-flash-latest}") String modelo,
+            @Value("${app.ia.razonamiento:LOW}") String nivelRazonamiento,
             @Value("${app.ia.base-url:}") String baseUrl) {
         this.herramientas = herramientas;
         this.objectMapper = objectMapper;
         this.modelo = modelo;
+        this.nivelRazonamiento = nivelRazonamiento == null ? "" : nivelRazonamiento.trim().toUpperCase();
         // si no hay API key el sistema funciona igual; solo el asistente queda deshabilitado
         if (apiKey == null || apiKey.isBlank()) {
             this.cliente = null;
@@ -81,9 +88,12 @@ public class AsistenteIAService {
                 .build();
 
         List<String> herramientasUsadas = new ArrayList<>();
+        long inicioConsulta = System.currentTimeMillis();
         try {
             for (int vuelta = 0; vuelta < MAX_VUELTAS_HERRAMIENTAS; vuelta++) {
-                GenerateContentResponse respuesta = cliente.models.generateContent(modelo, mensajes, config);
+                long inicio = System.currentTimeMillis();
+                GenerateContentResponse respuesta = generar(mensajes, config);
+                logger.info("Asistente: respuesta de Gemini en {} ms (vuelta {})", System.currentTimeMillis() - inicio, vuelta + 1);
 
                 if (respuesta.promptFeedback().flatMap(f -> f.blockReason()).isPresent()) {
                     return AsistenteDto.Respuesta.error("El asistente no puede responder esa solicitud. Intenta reformularla.");
@@ -104,6 +114,8 @@ public class AsistenteIAService {
 
                 List<FunctionCall> llamadas = respuesta.functionCalls();
                 if (llamadas == null || llamadas.isEmpty()) {
+                    logger.info("Asistente: consulta completa en {} ms ({} herramientas)",
+                            System.currentTimeMillis() - inicioConsulta, herramientasUsadas.size());
                     return AsistenteDto.Respuesta.ok(extraerTexto(contenidoModelo), herramientasUsadas);
                 }
 
@@ -112,7 +124,9 @@ public class AsistenteIAService {
                 for (FunctionCall llamada : llamadas) {
                     String nombre = llamada.name().orElse("");
                     herramientasUsadas.add(nombre);
+                    long inicioHerramienta = System.currentTimeMillis();
                     resultados.add(ejecutarHerramienta(llamada, nombre));
+                    logger.info("Asistente: herramienta {} en {} ms", nombre, System.currentTimeMillis() - inicioHerramienta);
                 }
                 mensajes.add(Content.builder().role("user").parts(resultados).build());
             }
@@ -127,6 +141,28 @@ public class AsistenteIAService {
         } catch (GenAiIOException e) {
             logger.error("No se pudo conectar con la API de IA", e);
             return AsistenteDto.Respuesta.error("No se pudo conectar con el servicio de IA. Revisa la conexion.");
+        }
+    }
+
+    // llama a Gemini con un nivel de razonamiento bajo (respuestas mas rapidas). Si el modelo configurado
+    // no admite ese ajuste (error 400), se repite la llamada sin el y no se vuelve a enviar.
+    private GenerateContentResponse generar(List<Content> mensajes, GenerateContentConfig config) {
+        if (nivelRazonamiento.isEmpty() || !razonamientoSoportado.get()) {
+            return cliente.models.generateContent(modelo, mensajes, config);
+        }
+        GenerateContentConfig conRazonamiento = config.toBuilder()
+                .thinkingConfig(ThinkingConfig.builder().thinkingLevel(nivelRazonamiento).build())
+                .build();
+        try {
+            return cliente.models.generateContent(modelo, mensajes, conRazonamiento);
+        } catch (ApiException e) {
+            if (e.code() != 400) {
+                throw e;
+            }
+            logger.warn("El modelo {} no acepto el nivel de razonamiento {}: {}. Se usara el valor por defecto.",
+                    modelo, nivelRazonamiento, e.message());
+            razonamientoSoportado.set(false);
+            return cliente.models.generateContent(modelo, mensajes, config);
         }
     }
 

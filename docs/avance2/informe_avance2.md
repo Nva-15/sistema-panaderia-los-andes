@@ -64,6 +64,7 @@ sequenceDiagram
 | Modelo | `gemini-flash-latest` (alias del modelo Flash más reciente), configurable con `GEMINI_MODEL` | Rápido, admite *function calling* y está incluido en el plan gratuito; el alias evita que el sistema falle cuando Google retire una versión |
 | Integración | SDK oficial `google-genai` 1.78.0 para Java | Tipado, manejo de errores y de las firmas de razonamiento (`thoughtSignature`) incluido |
 | Acceso a datos | *Function calling* (uso de herramientas) | La IA obtiene cifras reales; no se le entregan tablas completas ni puede ejecutar SQL |
+| Velocidad de respuesta | Nivel de razonamiento `LOW` (configurable con `GEMINI_THINKING`) | Los modelos Flash recientes "piensan" antes de responder; un nivel bajo reduce la espera en consultas simples. Si el modelo no admite el ajuste, el sistema lo omite automáticamente |
 | Bloqueos de seguridad | Se revisan `promptFeedback.blockReason` y `finishReason` | Si Gemini bloquea una solicitud, el usuario recibe un mensaje claro en vez de un error |
 
 ## 4. Diseño de prompts
@@ -102,6 +103,7 @@ Variables de entorno en Render (*Environment*):
 |---|---|
 | `GEMINI_API_KEY` | API key gratuita creada en https://aistudio.google.com (*Get API key*) |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-flash-latest` |
+| `GEMINI_THINKING` | Opcional. `MINIMAL`, `LOW` (por defecto), `MEDIUM` o `HIGH`. Menos razonamiento = respuestas más rápidas |
 
 ## 8. Referencias
 

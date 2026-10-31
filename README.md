@@ -61,6 +61,7 @@ Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin1
 | `PORT` | Puerto del servidor (por defecto 8081; Render lo asigna solo) |
 | `GEMINI_API_KEY` | API key gratuita de Google AI Studio para el asistente de IA (sin ella el asistente queda deshabilitado) |
 | `GEMINI_MODEL` | Opcional. Modelo de Gemini (por defecto `gemini-flash-latest`, el Flash más reciente) |
+| `GEMINI_THINKING` | Opcional. Nivel de razonamiento: `MINIMAL`, `LOW` (por defecto, más rápido), `MEDIUM` o `HIGH` |
 
 > El archivo `.env` **no se sube a GitHub**. En la nube las credenciales se configuran en el panel de Render y en los *Secrets* de GitHub.
 
