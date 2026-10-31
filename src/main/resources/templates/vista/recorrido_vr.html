@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.:: Recorrido VR ::.</title>
+    <script src="https://cdn.jsdelivr.net/npm/aframe@1.6.0/dist/aframe-v1.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/recorrido_vr.css}">
+</head>
+
+<body>
+    <!-- barra superior (fuera de la escena 3D) -->
+    <div class="barra-vr">
+        <a th:href="@{/principal/inicio}" class="volver"><i class="fas fa-arrow-left"></i> Volver al sistema</a>
+        <span class="titulo-vr"><i class="fas fa-vr-cardboard"></i> Gemelo digital · Panadería Los Andes</span>
+        <span id="estadoEnVivo" class="estado-vivo">Conectando…</span>
+    </div>
+
+    <!-- ficha de capacitacion que aparece al tocar un punto de informacion -->
+    <div id="ficha" class="ficha oculta">
+        <button id="cerrarFicha" class="cerrar" aria-label="Cerrar"><i class="fas fa-xmark"></i></button>
+        <h2 id="fichaTitulo"></h2>
+        <p id="fichaDato" class="dato"></p>
+        <ul id="fichaPasos"></ul>
+    </div>
+
+    <div class="ayuda-vr">
+        <i class="fas fa-computer-mouse"></i> Arrastra para mirar · <strong>W A S D</strong> para caminar ·
+        clic en los <span class="punto-ejemplo"></span> para ver la ficha · botón VR para usar lentes
+    </div>
+
+    <a-scene renderer="antialias: true; colorManagement: true" background="color: #f4ede4"
+        cursor="rayOrigin: mouse" raycaster="objects: .interactivo">
+        <a-assets>
+            <a-asset-item id="mTortaChocolate" th:src="@{/modelos/torta_chocolate.glb}"></a-asset-item>
+            <a-asset-item id="mTortaFresa" th:src="@{/modelos/torta_fresa.glb}"></a-asset-item>
+            <a-asset-item id="mTortaTresLeches" th:src="@{/modelos/torta_tres_leches.glb}"></a-asset-item>
+            <a-asset-item id="mPan" th:src="@{/modelos/pan_frances.glb}"></a-asset-item>
+            <a-asset-item id="mPastel" th:src="@{/modelos/pastel.glb}"></a-asset-item>
+        </a-assets>
+
+        <!-- luces -->
+        <a-entity light="type: ambient; intensity: 0.7"></a-entity>
+        <a-entity light="type: directional; intensity: 0.9; castShadow: true" position="2 5 3"></a-entity>
+
+        <!-- local: piso, paredes y techo (8 x 7 m) -->
+        <a-plane rotation="-90 0 0" width="8" height="7" color="#c9a27a" shadow="receive: true"></a-plane>
+        <a-box position="0 1.6 -3.5" width="8" height="3.2" depth="0.1" color="#f3e3cf"></a-box>
+        <a-box position="-4 1.6 0" width="0.1" height="3.2" depth="7" color="#efdcc4"></a-box>
+        <a-box position="4 1.6 0" width="0.1" height="3.2" depth="7" color="#efdcc4"></a-box>
+        <a-text value="PANADERIA LOS ANDES" position="0 2.75 -3.44" align="center" width="6" color="#5c3a1e"></a-text>
+
+        <!-- mostrador -->
+        <a-box position="0 0.5 -1.6" width="4" height="1" depth="0.7" color="#7a4f2b" shadow="cast: true"></a-box>
+        <a-box position="0 1.01 -1.6" width="4.1" height="0.04" depth="0.75" color="#5c3a1e"></a-box>
+
+        <!-- vitrina con sensor DHT22 (temperatura y humedad) -->
+        <a-entity id="vitrina" position="-0.9 1.03 -1.6">
+            <a-box id="vidrioVitrina" position="0 0.3 0" width="1.6" height="0.6" depth="0.6"
+                material="color: #bfe6c8; opacity: 0.35; transparent: true"></a-box>
+            <a-entity gltf-model="#mTortaChocolate" position="-0.5 0 0"></a-entity>
+            <a-entity gltf-model="#mTortaFresa" position="0 0 0"></a-entity>
+            <a-entity gltf-model="#mTortaTresLeches" position="0.5 0 0"></a-entity>
+            <a-text id="textoVitrina" value="Vitrina: --" position="0 0.75 0" align="center" width="2.4"
+                color="#3b2512"></a-text>
+            <a-sphere class="interactivo punto-info" data-ficha="vitrina" position="0.85 0.65 0" radius="0.07"
+                color="#0d6efd" animation="property: scale; to: 1.25 1.25 1.25; dir: alternate; loop: true; dur: 700"></a-sphere>
+        </a-entity>
+
+        <!-- bandeja de pan con celda de carga -->
+        <a-entity id="bandeja" position="1.05 1.03 -1.6">
+            <a-box position="0 0.01 0" width="0.9" height="0.02" depth="0.5" color="#9a9a9a"></a-box>
+            <a-entity id="panes"></a-entity>
+            <a-text id="textoBandeja" value="Bandeja: --" position="0 0.45 0" align="center" width="2.2"
+                color="#3b2512"></a-text>
+            <a-sphere class="interactivo punto-info" data-ficha="bandeja" position="0.5 0.35 0" radius="0.07"
+                color="#0d6efd" animation="property: scale; to: 1.25 1.25 1.25; dir: alternate; loop: true; dur: 700"></a-sphere>
+        </a-entity>
+
+        <!-- horno (zona de produccion) -->
+        <a-entity position="-2.9 0 -2.8">
+            <a-box position="0 0.9 0" width="1.4" height="1.8" depth="0.9" color="#3a3a3a"></a-box>
+            <a-box position="0 1.0 0.46" width="1" height="0.6" depth="0.02"
+                material="color: #ff8c2a; emissive: #ff6a00; emissiveIntensity: 0.6"></a-box>
+            <a-text value="HORNO" position="0 1.95 0.46" align="center" width="3" color="#3b2512"></a-text>
+            <a-sphere class="interactivo punto-info" data-ficha="horno" position="0.8 1.5 0.5" radius="0.07"
+                color="#0d6efd" animation="property: scale; to: 1.25 1.25 1.25; dir: alternate; loop: true; dur: 700"></a-sphere>
+        </a-entity>
+
+        <!-- estante con pasteles -->
+        <a-entity position="2.9 0 -3.1">
+            <a-box position="0 0.75 0" width="1.6" height="1.5" depth="0.5" color="#a87b51"></a-box>
+            <a-entity gltf-model="#mPastel" position="-0.5 1.5 0"></a-entity>
+            <a-entity gltf-model="#mPastel" position="0 1.5 0"></a-entity>
+            <a-entity gltf-model="#mPastel" position="0.5 1.5 0"></a-entity>
+        </a-entity>
+
+        <!-- puerta del almacen con sensor (interruptor) -->
+        <a-entity position="-3.92 0 0.6">
+            <a-box position="0 1.1 0" width="0.06" height="2.2" depth="1.1" color="#4a3020"></a-box>
+            <a-entity id="bisagra" position="0.05 0 -0.5">
+                <a-box id="puerta" position="0 1.05 0.5" width="0.05" height="2.1" depth="1" color="#8b5a2b"></a-box>
+            </a-entity>
+            <a-text value="ALMACEN" position="0.08 2.35 0" rotation="0 90 0" align="center" width="2.5"
+                color="#3b2512"></a-text>
+            <a-text id="textoPuerta" value="Puerta: --" position="0.08 2.6 0" rotation="0 90 0" align="center"
+                width="2.5" color="#3b2512"></a-text>
+            <a-sphere class="interactivo punto-info" data-ficha="puerta" position="0.25 1.6 0.7" radius="0.07"
+                color="#0d6efd" animation="property: scale; to: 1.25 1.25 1.25; dir: alternate; loop: true; dur: 700"></a-sphere>
+        </a-entity>
+
+        <!-- entrada con sensor PIR (contador de clientes) -->
+        <a-entity position="0 0 3.2">
+            <a-box position="0 2.4 0" width="1.6" height="0.15" depth="0.15" color="#5c3a1e"></a-box>
+            <a-text id="textoClientes" value="Clientes: --" position="0 2.65 0" rotation="0 180 0" align="center"
+                width="3" color="#3b2512"></a-text>
+            <a-sphere class="interactivo punto-info" data-ficha="clientes" position="0.9 2.4 0" radius="0.07"
+                color="#0d6efd" animation="property: scale; to: 1.25 1.25 1.25; dir: alternate; loop: true; dur: 700"></a-sphere>
+        </a-entity>
+
+        <!-- camara del visitante (mouse + teclado) y controles de lentes VR -->
+        <a-entity id="jugador" position="0 0 2">
+            <a-entity camera look-controls wasd-controls="acceleration: 25" position="0 1.6 0"></a-entity>
+            <a-entity laser-controls="hand: right" raycaster="objects: .interactivo"></a-entity>
+        </a-entity>
+    </a-scene>
+
+    <script th:src="@{/js/recorrido_vr.js}"></script>
+</body>
+
+</html>

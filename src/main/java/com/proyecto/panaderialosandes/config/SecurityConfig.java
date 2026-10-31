@@ -18,6 +18,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/principal","/login", "/css/**", "/js/**", "/imagenes/**").permitAll()
+                // catalogo de Realidad Aumentada para clientes (sin sesion): pagina, datos publicos, QR y modelos 3D
+                .requestMatchers("/catalogo", "/catalogo/**", "/api/catalogo", "/modelos/**").permitAll()
                 // entrada HTTP alternativa del ESP32 (sin sesion); el controlador valida la cabecera X-API-KEY
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/iot/telemetria", "/api/iot/alertas").permitAll()
                 // automatizaciones programadas (GitHub Actions); el controlador valida la cabecera X-API-KEY

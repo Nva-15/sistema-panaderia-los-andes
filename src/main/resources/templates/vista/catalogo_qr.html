@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR del catálogo · Panadería Los Andes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 24px;
+            background: #fff;
+            color: #3b2512;
+        }
+
+        .cartel {
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 4px solid #5c3a1e;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .cartel img.logo {
+            height: 80px;
+        }
+
+        .cartel img.qr {
+            width: 100%;
+            max-width: 300px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin: 8px 0;
+        }
+
+        .pasos {
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .url {
+            font-size: 0.75rem;
+            color: #777;
+            word-break: break-all;
+        }
+
+        .imprimir {
+            margin-top: 16px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #5c3a1e;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        @media print {
+            .imprimir {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cartel">
+        <img class="logo" th:src="@{/imagenes/logo-de-la-panaderia.png}" alt="Panadería Los Andes">
+        <h1>¡Mira nuestras tortas en tu mesa!</h1>
+        <img class="qr" th:src="@{/catalogo/qr.png}" alt="Código QR del catálogo 3D">
+        <ol class="pasos">
+            <li>Escanea el código con la cámara de tu celular.</li>
+            <li>Elige una torta, pan o pastel.</li>
+            <li>Toca <strong>“Ver en tu mesa”</strong> y apunta a una superficie plana.</li>
+        </ol>
+        <p class="url" th:text="${urlCatalogo}"></p>
+        <button class="imprimir" onclick="window.print()">Imprimir cartel</button>
+    </div>
+</body>
+
+</html>

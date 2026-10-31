@@ -112,6 +112,12 @@
 			<artifactId>itextpdf</artifactId>
 			<version>5.5.13.2</version>
 		</dependency>
+		<!-- Generacion de codigos QR para el catalogo de Realidad Aumentada -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.5.3</version>
+		</dependency>
 		<!-- Cliente MQTT para recibir los datos del ESP32 (IoT) -->
 		<dependency>
 			<groupId>org.eclipse.paho</groupId>
