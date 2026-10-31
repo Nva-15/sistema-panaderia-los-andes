@@ -56,7 +56,9 @@ class VistasPorRolTest {
                 .andExpect(content().string(containsString("Ventas de los últimos 7 días")))
                 .andExpect(content().string(containsString("/principal/listar_usuarios")))
                 .andExpect(content().string(containsString("/principal/automatizaciones")))
-                .andExpect(content().string(containsString("/principal/reporte_venta")));
+                .andExpect(content().string(containsString("/principal/reporte_venta")))
+                .andExpect(content().string(containsString("/info/manual-administrador.pdf")))
+                .andExpect(content().string(not(containsString("/info/manual-vendedor.pdf"))));
     }
 
     @Test
@@ -69,7 +71,19 @@ class VistasPorRolTest {
                 .andExpect(content().string(not(containsString("/principal/listar_usuarios"))))
                 .andExpect(content().string(not(containsString("/principal/automatizaciones"))))
                 .andExpect(content().string(not(containsString("/principal/reporte_venta"))))
-                .andExpect(content().string(not(containsString("/api/reportes/productos/excel"))));
+                .andExpect(content().string(not(containsString("/api/reportes/productos/excel"))))
+                .andExpect(content().string(containsString("/info/manual-vendedor.pdf")))
+                .andExpect(content().string(not(containsString("/info/manual-administrador.pdf"))));
+    }
+
+    @Test
+    void cadaRolDescargaSuManual() throws Exception {
+        mockMvc.perform(get("/info/manual-vendedor.pdf").with(user("vende").roles("VENDEDOR")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/info/manual-administrador.pdf").with(user("vende").roles("VENDEDOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/info/manual-administrador.pdf").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk());
     }
 
     @Test

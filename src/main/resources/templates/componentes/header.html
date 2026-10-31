@@ -32,7 +32,9 @@
     </th:block>
 
     <div class="pie">
-      <a class="enlace" th:href="@{/info/Manual-de-usuario.pdf}" target="_blank"><i class="fas fa-circle-question"></i>Manual de usuario</a>
+      <!-- cada rol abre su propio manual -->
+      <a class="enlace" sec:authorize="hasRole('ADMIN')" th:href="@{/info/manual-administrador.pdf}" target="_blank"><i class="fas fa-circle-question"></i>Manual de usuario</a>
+      <a class="enlace" sec:authorize="!hasRole('ADMIN')" th:href="@{/info/manual-vendedor.pdf}" target="_blank"><i class="fas fa-circle-question"></i>Manual de usuario</a>
       <a class="enlace botonCerrar" th:href="@{/logout}"><i class="fas fa-right-from-bracket"></i>Cerrar sesión</a>
     </div>
   </aside>

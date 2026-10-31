@@ -30,6 +30,8 @@ public class SecurityConfig {
                 // automatizaciones programadas (GitHub Actions); el controlador valida la cabecera X-API-KEY
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/automatizaciones/*/ejecutar").permitAll()
                 .requestMatchers("/principal/automatizaciones", "/principal/automatizaciones/**").hasRole("ADMIN")
+                // el manual del administrador describe opciones que el vendedor no tiene
+                .requestMatchers("/info/manual-administrador.pdf").hasRole("ADMIN")
                 .requestMatchers( "/principal/venta", "/principal/productos","/productos/buscar").hasAnyRole("ADMIN", "VENDEDOR")
                 .requestMatchers("/login/nuevo","/principal/listar_usuarios", "/principal/reporte**","/api/reporte-ventas/**","/productos/**").hasRole("ADMIN")
                 // administracion de usuarios y reportes: solo ADMIN
