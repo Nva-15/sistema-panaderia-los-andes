@@ -12,5 +12,9 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 ENV PORT=8081
 EXPOSE 8081
-# MaxRAMPercentage ajusta la memoria de Java al limite del contenedor (plan gratuito de Render: 512 MB)
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]
+# Ajustes para que Java quepa en 512 MB (plan gratuito de Render):
+#  - heap limitado al 50% de la memoria del contenedor (el resto lo usan metaspace, codigo e hilos)
+#  - SerialGC: el recolector de basura que menos memoria consume
+#  - pila de hilos mas pequena y compilador JIT simplificado (arranque mas rapido con poca CPU)
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=50 -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m"
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]
