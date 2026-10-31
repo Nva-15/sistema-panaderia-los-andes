@@ -18,6 +18,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 | DevOps | Git/GitHub, GitHub Actions, Docker, Render |
 | Inteligencia Artificial | Groq o Google Gemini (planes gratuitos), *function calling* |
 | IoT | ESP32 (Wokwi), MQTT (HiveMQ + Eclipse Paho), Chart.js |
+| Automatización | Make (No-Code) + Telegram, GitHub Actions programado, agente de IA |
 
 ## Módulos
 
@@ -27,6 +28,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 - **Usuarios:** roles `ADMIN` y `VENDEDOR`, contraseñas cifradas con BCrypt.
 - **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Groq o Google Gemini, planes gratuitos).
 - **Monitoreo IoT:** dashboard en tiempo real con los sensores del ESP32 (vitrina, bandeja de pan, puerta del almacén y clientes) recibidos por MQTT, gráficos y alertas. Ver [iot/README.md](iot/README.md).
+- **Automatizaciones:** reporte de cierre diario, plan de producción con agente de IA, avisos de stock bajo y alertas IoT enviados a Telegram mediante Make. Ver la [guía de configuración](docs/avance4/guia_make_telegram.md).
 
 ## Cómo ejecutarlo
 
@@ -68,6 +70,8 @@ Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin1
 | `MQTT_TOPICO_BASE` | Opcional. Tópico base del ESP32 (por defecto `losandes/utpgrupo03`) |
 | `MQTT_USUARIO` / `MQTT_CLAVE` | Opcional. Credenciales si el broker las requiere |
 | `IOT_API_KEY` | Opcional. Habilita la entrada HTTP alternativa `/api/iot/telemetria` |
+| `AUTOMATIZACION_WEBHOOK_URL` | Opcional. URL del webhook de Make que recibe las automatizaciones |
+| `AUTOMATIZACION_API_KEY` | Opcional. Clave que usa GitHub Actions para ejecutar las tareas programadas |
 | `IA_PROVEEDOR` | Opcional. `groq`, `gemini` o `auto` (por defecto: Groq si tiene key, si no Gemini) |
 | `GEMINI_MODEL` | Opcional. Modelo de Gemini (por defecto `gemini-flash-latest`, el Flash más reciente) |
 | `GEMINI_THINKING` | Opcional. Nivel de razonamiento: `MINIMAL`, `LOW` (por defecto, más rápido), `MEDIUM` o `HIGH` |
@@ -113,3 +117,4 @@ Desde ese momento, cada cambio que llega a `main` y pasa las pruebas se publica 
 - [Avance 1 – Diagnóstico, arquitectura y DevOps](docs/avance1/informe_avance1.md)
 - [Avance 2 – Inteligencia Artificial y Prompt Engineering](docs/avance2/informe_avance2.md) · [Banco de prompts](docs/avance2/banco_prompts.md)
 - [Avance 3 – Solución IoT](docs/avance3/informe_avance3.md) · [Prototipo ESP32](iot/README.md)
+- [Avance 4 – Automatización RPA y No-Code](docs/avance4/informe_avance4.md) · [Guía Make + Telegram](docs/avance4/guia_make_telegram.md)
