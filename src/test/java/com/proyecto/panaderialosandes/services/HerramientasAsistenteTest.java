@@ -133,6 +133,6 @@ class HerramientasAsistenteTest {
     @Test
     void lasDefinicionesIncluyenAmbasHerramientas() {
         List<String> nombres = herramientas.herramientas().stream().map(t -> t.nombre()).toList();
-        assertTrue(nombres.containsAll(List.of("consultar_ventas", "consultar_inventario")));
+        assertTrue(nombres.containsAll(List.of("consultar_ventas", "consultar_inventario", "consultar_sensores")));
     }
 }
