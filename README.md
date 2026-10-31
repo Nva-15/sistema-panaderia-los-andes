@@ -19,6 +19,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 | Inteligencia Artificial | Groq o Google Gemini (planes gratuitos), *function calling* |
 | IoT | ESP32 (Wokwi), MQTT (HiveMQ + Eclipse Paho), Chart.js |
 | Automatización | Make (No-Code) + Telegram, GitHub Actions programado, agente de IA |
+| AR / VR | `<model-viewer>` (WebAR), A-Frame (WebXR), modelos glTF generados con Python, QR con ZXing |
 
 ## Módulos
 
@@ -29,6 +30,8 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 - **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Groq o Google Gemini, planes gratuitos).
 - **Monitoreo IoT:** dashboard en tiempo real con los sensores del ESP32 (vitrina, bandeja de pan, puerta del almacén y clientes) recibidos por MQTT, gráficos y alertas. Ver [iot/README.md](iot/README.md).
 - **Automatizaciones:** reporte de cierre diario, plan de producción con agente de IA, avisos de stock bajo y alertas IoT enviados a Telegram mediante Make. Ver la [guía de configuración](docs/avance4/guia_make_telegram.md).
+- **Catálogo en Realidad Aumentada:** página pública (`/catalogo`) para que el cliente escanee un QR y vea las tortas en 3D sobre su mesa, con precio y disponibilidad en vivo.
+- **Gemelo digital en VR:** recorrido 3D de la panadería para capacitación, que refleja en vivo los sensores del ESP32.
 
 ## Cómo ejecutarlo
 
@@ -118,3 +121,4 @@ Desde ese momento, cada cambio que llega a `main` y pasa las pruebas se publica 
 - [Avance 2 – Inteligencia Artificial y Prompt Engineering](docs/avance2/informe_avance2.md) · [Banco de prompts](docs/avance2/banco_prompts.md)
 - [Avance 3 – Solución IoT](docs/avance3/informe_avance3.md) · [Prototipo ESP32](iot/README.md)
 - [Avance 4 – Automatización RPA y No-Code](docs/avance4/informe_avance4.md) · [Guía Make + Telegram](docs/avance4/guia_make_telegram.md)
+- [Avance 5 – AR, VR y Metaverso](docs/avance5/informe_avance5.md)
