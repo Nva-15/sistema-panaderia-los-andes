@@ -1,0 +1,33 @@
+# Levanta el sistema completo en local: docker compose up --build
+# Luego abrir http://localhost:8081
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: panaderia_los_andes
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - datos_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      retries: 20
+
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:mysql://db:3306/panaderia_los_andes?serverTimezone=America/Lima&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos_mysql:

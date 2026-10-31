@@ -1,0 +1,22 @@
+# Blueprint de Render: crea el servicio web a partir del Dockerfile.
+# Los valores con sync: false se completan en el panel de Render (no se guardan en GitHub).
+services:
+  - type: web
+    name: panaderia-los-andes
+    runtime: docker
+    plan: free
+    autoDeploy: false   # el despliegue lo dispara GitHub Actions cuando las pruebas pasan
+    healthCheckPath: /login
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: THYMELEAF_CACHE
+        value: "true"
