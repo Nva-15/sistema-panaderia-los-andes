@@ -5,7 +5,7 @@ services:
     name: panaderia-los-andes
     runtime: docker
     plan: free
-    autoDeploy: false   # el despliegue lo dispara GitHub Actions cuando las pruebas pasan
+    autoDeployTrigger: checksPass   # publica solo cuando el pipeline de GitHub Actions pasa
     healthCheckPath: /login
     envVars:
       - key: DB_URL

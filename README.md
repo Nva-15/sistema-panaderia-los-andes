@@ -5,6 +5,8 @@
 Sistema web de gestión de ventas, inventario, clientes, usuarios y reportes para la Panadería Pastelería Los Andes.
 Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 
+🌐 **Sistema en la nube:** https://sistema-panaderia-los-andes.onrender.com
+
 ## Tecnologías
 
 | Capa | Tecnología |
@@ -72,15 +74,18 @@ El pipeline [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) se ejec
 
 1. **Compilar y probar** con Maven (Java 21).
 2. **Construir la imagen Docker**.
-3. **Desplegar en Render** (solo en `main` y si todo lo anterior pasó).
+3. **Desplegar en Render**: Render tiene *Auto-Deploy: After CI Checks Pass*, así que publica automáticamente cuando el pipeline termina en verde en `main`.
 
 ## Despliegue en la nube
 
 1. Crear una base de datos MySQL gratuita en **Aiven** o **TiDB Cloud**.
-2. En **Render**: *New → Blueprint* y seleccionar este repositorio (usa `render.yaml`). Completar `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` y `ADMIN_PASSWORD`.
-3. En Render, en *Settings → Deploy Hook*, copiar la URL y guardarla en GitHub como secreto `RENDER_DEPLOY_HOOK_URL` (*Settings → Secrets and variables → Actions*).
+2. En **Render**: *New → Web Service*, elegir este repositorio (detecta el `Dockerfile`), plan *Free*, región *Virginia*.
+3. Agregar las variables `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` y `THYMELEAF_CACHE=true`.
+4. En *Advanced*: *Health Check Path* `/login` y *Auto-Deploy* **After CI Checks Pass**.
 
 Desde ese momento, cada cambio que llega a `main` y pasa las pruebas se publica automáticamente.
+
+> El plan gratuito de Render apaga el servicio tras un periodo sin uso; la primera visita tarda 1 a 3 minutos en despertarlo.
 
 ## Flujo de trabajo del equipo
 

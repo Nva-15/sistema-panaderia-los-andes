@@ -184,8 +184,7 @@ flowchart LR
         B1[Compilar<br/>Maven + Java 21] --> B2[Pruebas automáticas<br/>JUnit + H2]
         B2 --> B3[Construir imagen<br/>Docker]
     end
-    CI -- todo en verde y merge a main --> CD[Deploy hook]
-    CD --> R[Render<br/>nueva versión en producción]
+    CI -- todo en verde en main --> R[Render<br/>Auto-Deploy: After CI Checks Pass<br/>nueva versión en producción]
     CI -- falla --> X[Se bloquea el merge<br/>y se notifica al equipo]
 ```
 
@@ -195,7 +194,7 @@ flowchart LR
 | Integración continua | GitHub Actions | Que el proyecto compile en cada cambio |
 | Pruebas automáticas | JUnit 5, Mockito, Spring Security Test, H2 | Reglas de negocio y permisos por rol |
 | Empaquetado | Docker (imagen multi-etapa) | Que la aplicación se ejecute igual en cualquier entorno |
-| Despliegue continuo | Render (deploy hook) | Publicación automática solo si todo pasó |
+| Despliegue continuo | Render (Auto-Deploy *After CI Checks Pass*) | Publicación automática solo si todo pasó |
 | Entorno de desarrollo en la nube | GitHub Codespaces + Docker Compose | Todos trabajan con el mismo entorno |
 
 ### 5.1 Pruebas automáticas incluidas
@@ -214,7 +213,17 @@ flowchart LR
 - **Colaboración:** cada integrante trabaja en su rama y el pipeline valida su aporte.
 - **Reproducibilidad:** Docker garantiza el mismo entorno en local, Codespaces y la nube.
 
-## 6. Referencias
+## 6. Despliegue en la nube
+
+| Componente | Servicio | Detalle |
+|---|---|---|
+| Aplicación | Render (Web Service, Docker, plan Free, región Virginia) | https://sistema-panaderia-los-andes.onrender.com |
+| Base de datos | Aiven for MySQL 8.4 (conexión cifrada SSL) | Credenciales solo en variables de entorno de Render |
+| Código y pipeline | GitHub + GitHub Actions | https://github.com/Nva-15/sistema-panaderia-los-andes |
+
+_[Insertar capturas: pipeline en verde en GitHub Actions, servicio "Live" en Render y el sistema funcionando en la URL pública.]_
+
+## 7. Referencias
 
 - Spring Boot Reference Documentation. https://docs.spring.io/spring-boot/
 - GitHub Actions Documentation. https://docs.github.com/actions
