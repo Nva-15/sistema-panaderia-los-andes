@@ -20,13 +20,17 @@ public class HerramientasAsistente {
 
     public static final String CONSULTAR_VENTAS = "consultar_ventas";
     public static final String CONSULTAR_INVENTARIO = "consultar_inventario";
+    public static final String CONSULTAR_SENSORES = "consultar_sensores";
 
     private final ReporteVentaService reporteVentaService;
     private final ProductoService productoService;
+    private final IotService iotService;
 
-    public HerramientasAsistente(ReporteVentaService reporteVentaService, ProductoService productoService) {
+    public HerramientasAsistente(ReporteVentaService reporteVentaService, ProductoService productoService,
+            IotService iotService) {
         this.reporteVentaService = reporteVentaService;
         this.productoService = productoService;
+        this.iotService = iotService;
     }
 
     // descripcion de una herramienta, independiente del proveedor de IA
@@ -59,7 +63,13 @@ public class HerramientasAsistente {
                                         "description", "Que productos devolver")),
                         "required", List.of("filtro")));
 
-        return List.of(ventas, inventario);
+        Herramienta sensores = new Herramienta(CONSULTAR_SENSORES,
+                "Consulta los sensores IoT de la panaderia (ESP32): temperatura y humedad de la vitrina, peso y panes "
+                        + "en la bandeja, estado de la puerta del almacen y clientes detectados. Devuelve el ultimo valor "
+                        + "de cada uno, su rango normal y las alertas pendientes.",
+                Map.of("type", "object", "properties", Map.of()));
+
+        return List.of(ventas, inventario, sensores);
     }
 
     // formato de Google Gemini
@@ -91,6 +101,7 @@ public class HerramientasAsistente {
             case CONSULTAR_VENTAS -> consultarVentas(
                     texto(entrada.get("fecha_desde")), texto(entrada.get("fecha_hasta")), texto(entrada.get("producto")));
             case CONSULTAR_INVENTARIO -> consultarInventario(texto(entrada.get("filtro")));
+            case CONSULTAR_SENSORES -> iotService.resumen();
             default -> throw new IllegalArgumentException("Herramienta desconocida: " + nombre);
         };
     }

@@ -1,0 +1,27 @@
+.icono-iot {
+    color: #8b6a4e;
+}
+
+.tarjeta-sensor {
+    border-left: 6px solid #adb5bd;
+}
+
+.tarjeta-sensor.normal {
+    border-left-color: #198754;
+}
+
+.tarjeta-sensor.alerta {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.tarjeta-sensor .valor {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.contenedor-grafico {
+    position: relative;
+    height: 220px;
+}

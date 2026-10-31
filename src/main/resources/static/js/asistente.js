@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const nombresHerramientas = {
         consultar_ventas: 'ventas',
-        consultar_inventario: 'inventario'
+        consultar_inventario: 'inventario',
+        consultar_sensores: 'sensores'
     };
 
     formChat.addEventListener('submit', function (e) {
