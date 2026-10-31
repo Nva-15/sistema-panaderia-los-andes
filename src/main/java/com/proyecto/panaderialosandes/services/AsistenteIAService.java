@@ -9,28 +9,26 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.core.JsonValue;
-import com.anthropic.errors.AnthropicServiceException;
-import com.anthropic.errors.AnthropicException;
-import com.anthropic.errors.RateLimitException;
-import com.anthropic.models.beta.messages.BetaContentBlock;
-import com.anthropic.models.beta.messages.BetaContentBlockParam;
-import com.anthropic.models.beta.messages.BetaMessage;
-import com.anthropic.models.beta.messages.BetaMessageParam;
-import com.anthropic.models.beta.messages.BetaOutputConfig;
-import com.anthropic.models.beta.messages.BetaStopReason;
-import com.anthropic.models.beta.messages.BetaToolResultBlockParam;
-import com.anthropic.models.beta.messages.BetaToolUseBlock;
-import com.anthropic.models.beta.messages.MessageCreateParams;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.genai.Client;
+import com.google.genai.errors.ApiException;
+import com.google.genai.errors.GenAiIOException;
+import com.google.genai.types.Candidate;
+import com.google.genai.types.Content;
+import com.google.genai.types.FinishReason;
+import com.google.genai.types.FunctionCall;
+import com.google.genai.types.FunctionResponse;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.HttpOptions;
+import com.google.genai.types.Part;
+import com.google.genai.types.Tool;
 import com.proyecto.panaderialosandes.dto.AsistenteDto;
 import com.proyecto.panaderialosandes.services.PromptsAsistente.Modo;
 
-// asistente de IA del sistema: envia la conversacion a Claude y ejecuta las herramientas que el modelo pida
-// (ciclo de "tool use": el modelo pide datos -> el sistema los consulta -> el modelo responde con esos datos)
+// asistente de IA del sistema: envia la conversacion a Google Gemini y ejecuta las herramientas que el modelo pida
+// (ciclo de "function calling": el modelo pide datos -> el sistema los consulta -> el modelo responde con esos datos)
 @Service
 public class AsistenteIAService {
 
@@ -40,26 +38,23 @@ public class AsistenteIAService {
 
     private final HerramientasAsistente herramientas;
     private final ObjectMapper objectMapper;
-    private final AnthropicClient cliente;
+    private final Client cliente;
     private final String modelo;
-    private final String esfuerzo;
 
     public AsistenteIAService(HerramientasAsistente herramientas, ObjectMapper objectMapper,
             @Value("${app.ia.api-key:}") String apiKey,
-            @Value("${app.ia.modelo:claude-opus-5-5}") String modelo,
-            @Value("${app.ia.esfuerzo:medium}") String esfuerzo,
+            @Value("${app.ia.modelo:gemini-flash-latest}") String modelo,
             @Value("${app.ia.base-url:}") String baseUrl) {
         this.herramientas = herramientas;
         this.objectMapper = objectMapper;
         this.modelo = modelo;
-        this.esfuerzo = esfuerzo;
         // si no hay API key el sistema funciona igual; solo el asistente queda deshabilitado
         if (apiKey == null || apiKey.isBlank()) {
             this.cliente = null;
         } else {
-            AnthropicOkHttpClient.Builder builder = AnthropicOkHttpClient.builder().apiKey(apiKey);
+            Client.Builder builder = Client.builder().apiKey(apiKey);
             if (baseUrl != null && !baseUrl.isBlank()) {
-                builder.baseUrl(baseUrl);
+                builder.httpOptions(HttpOptions.builder().baseUrl(baseUrl).build());
             }
             this.cliente = builder.build();
         }
@@ -72,77 +67,72 @@ public class AsistenteIAService {
     public AsistenteDto.Respuesta responder(Modo modo, List<AsistenteDto.Mensaje> historial) {
         if (!estaConfigurado()) {
             return AsistenteDto.Respuesta.error(
-                    "El asistente de IA no esta configurado. Falta la variable de entorno ANTHROPIC_API_KEY.");
+                    "El asistente de IA no esta configurado. Falta la variable de entorno GEMINI_API_KEY.");
         }
 
-        List<BetaMessageParam> mensajes = construirMensajes(modo, historial);
+        List<Content> mensajes = construirMensajes(modo, historial);
         if (mensajes.isEmpty()) {
             return AsistenteDto.Respuesta.error("Escribe una pregunta para el asistente.");
         }
 
+        GenerateContentConfig config = GenerateContentConfig.builder()
+                .systemInstruction(Content.fromParts(Part.fromText(PromptsAsistente.sistema(modo))))
+                .tools(Tool.builder().functionDeclarations(herramientas.definiciones()).build())
+                .build();
+
         List<String> herramientasUsadas = new ArrayList<>();
         try {
             for (int vuelta = 0; vuelta < MAX_VUELTAS_HERRAMIENTAS; vuelta++) {
-                BetaMessage respuesta = cliente.beta().messages().create(construirPeticion(modo, mensajes));
-                BetaStopReason motivo = respuesta.stopReason().orElse(null);
+                GenerateContentResponse respuesta = cliente.models.generateContent(modelo, mensajes, config);
 
-                if (BetaStopReason.REFUSAL.equals(motivo)) {
+                if (respuesta.promptFeedback().flatMap(f -> f.blockReason()).isPresent()) {
+                    return AsistenteDto.Respuesta.error("El asistente no puede responder esa solicitud. Intenta reformularla.");
+                }
+                Candidate candidato = respuesta.candidates().flatMap(c -> c.stream().findFirst()).orElse(null);
+                if (candidato == null || candidato.content().isEmpty()) {
+                    return AsistenteDto.Respuesta.error("El asistente no genero una respuesta. Intenta reformular la pregunta.");
+                }
+                FinishReason.Known motivo = candidato.finishReason().map(FinishReason::knownEnum).orElse(null);
+                if (motivo != null && motivo != FinishReason.Known.STOP && motivo != FinishReason.Known.MAX_TOKENS) {
+                    logger.warn("Respuesta de IA terminada por: {}", motivo);
                     return AsistenteDto.Respuesta.error("El asistente no puede responder esa solicitud. Intenta reformularla.");
                 }
 
-                // se devuelve la respuesta completa del modelo (incluye sus bloques de razonamiento) para la siguiente vuelta
-                mensajes.add(respuesta.toParam());
+                // se devuelve el contenido completo del modelo (incluye sus firmas de razonamiento) para la siguiente vuelta
+                Content contenidoModelo = candidato.content().get();
+                mensajes.add(contenidoModelo);
 
-                if (!BetaStopReason.TOOL_USE.equals(motivo)) {
-                    return AsistenteDto.Respuesta.ok(extraerTexto(respuesta), herramientasUsadas);
+                List<FunctionCall> llamadas = respuesta.functionCalls();
+                if (llamadas == null || llamadas.isEmpty()) {
+                    return AsistenteDto.Respuesta.ok(extraerTexto(contenidoModelo), herramientasUsadas);
                 }
 
-                List<BetaContentBlockParam> resultados = new ArrayList<>();
-                for (BetaContentBlock bloque : respuesta.content()) {
-                    bloque.toolUse().ifPresent(uso -> {
-                        herramientasUsadas.add(uso.name());
-                        resultados.add(ejecutarHerramienta(uso));
-                    });
+                // todos los resultados de las funciones van juntos en un solo mensaje del usuario
+                List<Part> resultados = new ArrayList<>();
+                for (FunctionCall llamada : llamadas) {
+                    String nombre = llamada.name().orElse("");
+                    herramientasUsadas.add(nombre);
+                    resultados.add(ejecutarHerramienta(llamada, nombre));
                 }
-                // todos los resultados de herramientas van juntos en un solo mensaje del usuario
-                mensajes.add(BetaMessageParam.ofUserOfContentBlockParams(resultados));
+                mensajes.add(Content.builder().role("user").parts(resultados).build());
             }
             return AsistenteDto.Respuesta.error("La consulta necesito demasiados pasos. Intenta una pregunta mas concreta.");
-        } catch (RateLimitException e) {
-            logger.warn("Limite de uso de la API de IA alcanzado", e);
-            return AsistenteDto.Respuesta.error("El asistente esta recibiendo muchas consultas. Intenta en un minuto.");
-        } catch (AnthropicServiceException e) {
-            logger.error("Error de la API de IA (HTTP {})", e.statusCode(), e);
+        } catch (ApiException e) {
+            logger.error("Error de la API de IA (HTTP {}): {}", e.code(), e.message());
+            if (e.code() == 429) {
+                return AsistenteDto.Respuesta.error(
+                        "Se alcanzo el limite gratuito de consultas por minuto o por dia. Intenta en un momento.");
+            }
             return AsistenteDto.Respuesta.error("El servicio de IA respondio con un error. Intenta nuevamente.");
-        } catch (AnthropicException e) {
+        } catch (GenAiIOException e) {
             logger.error("No se pudo conectar con la API de IA", e);
             return AsistenteDto.Respuesta.error("No se pudo conectar con el servicio de IA. Revisa la conexion.");
         }
     }
 
-    private MessageCreateParams construirPeticion(Modo modo, List<BetaMessageParam> mensajes) {
-        MessageCreateParams.Builder peticion = MessageCreateParams.builder()
-                .model(modelo)
-                .maxTokens(16000L)
-                .system(PromptsAsistente.sistema(modo))
-                .outputConfig(BetaOutputConfig.builder()
-                        .effort(BetaOutputConfig.Effort.of(esfuerzo))
-                        .build())
-                .messages(mensajes);
-        herramientas.definiciones().forEach(peticion::addTool);
-
-        // si el modelo principal rechaza la solicitud, la API la reintenta con el modelo alternativo recomendado
-        // (los modelos Haiku no tienen esta opcion)
-        if (!modelo.contains("haiku")) {
-            peticion.addBeta("server-side-fallback-2026-07-01")
-                    .putAdditionalBodyProperty("fallbacks", JsonValue.from("default"));
-        }
-        return peticion.build();
-    }
-
-    // convierte el historial del chat (solo texto) en mensajes para la API
-    private List<BetaMessageParam> construirMensajes(Modo modo, List<AsistenteDto.Mensaje> historial) {
-        List<BetaMessageParam> mensajes = new ArrayList<>();
+    // convierte el historial del chat (solo texto) en mensajes para la API (roles "user" y "model")
+    private List<Content> construirMensajes(Modo modo, List<AsistenteDto.Mensaje> historial) {
+        List<Content> mensajes = new ArrayList<>();
         List<AsistenteDto.Mensaje> recientes = historial == null ? List.of()
                 : historial.subList(Math.max(0, historial.size() - MAX_MENSAJES_HISTORIAL), historial.size());
 
@@ -153,44 +143,45 @@ public class AsistenteIAService {
             if ("asistente".equals(m.rol())) {
                 // la conversacion debe empezar con un mensaje del usuario
                 if (!mensajes.isEmpty()) {
-                    mensajes.add(BetaMessageParam.ofAssistant(m.texto()));
+                    mensajes.add(Content.builder().role("model").parts(Part.fromText(m.texto())).build());
                 }
             } else {
-                mensajes.add(BetaMessageParam.ofUser(m.texto()));
+                mensajes.add(Content.builder().role("user").parts(Part.fromText(m.texto())).build());
             }
         }
         if (mensajes.isEmpty() && modo != Modo.CHAT) {
-            mensajes.add(BetaMessageParam.ofUser(PromptsAsistente.solicitudInicial(modo)));
+            mensajes.add(Content.builder().role("user")
+                    .parts(Part.fromText(PromptsAsistente.solicitudInicial(modo))).build());
         }
         return mensajes;
     }
 
-    private BetaContentBlockParam ejecutarHerramienta(BetaToolUseBlock uso) {
-        BetaToolResultBlockParam.Builder resultado = BetaToolResultBlockParam.builder().toolUseId(uso.id());
+    private Part ejecutarHerramienta(FunctionCall llamada, String nombre) {
+        Map<String, Object> respuesta;
         try {
-            Map<String, Object> entrada = objectMapper.convertValue(
-                    uso._input().convert(Object.class), new TypeReference<Map<String, Object>>() {
-                    });
-            Object datos = herramientas.ejecutar(uso.name(), entrada == null ? Map.of() : entrada);
-            resultado.content(objectMapper.writeValueAsString(datos));
+            Object datos = herramientas.ejecutar(nombre, llamada.args().orElse(Map.of()));
+            // la respuesta de una funcion debe ser un objeto JSON
+            respuesta = Map.of("resultado", objectMapper.convertValue(datos, new TypeReference<Object>() {
+            }));
         } catch (Exception e) {
             // el error se devuelve al modelo para que pueda corregir la llamada o explicarlo al usuario
-            logger.warn("Error ejecutando la herramienta {}: {}", uso.name(), e.getMessage());
-            resultado.content("Error: " + e.getMessage()).isError(true);
+            logger.warn("Error ejecutando la herramienta {}: {}", nombre, e.getMessage());
+            respuesta = Map.of("error", String.valueOf(e.getMessage()));
         }
-        return BetaContentBlockParam.ofToolResult(resultado.build());
+        FunctionResponse.Builder resultado = FunctionResponse.builder().name(nombre).response(respuesta);
+        llamada.id().ifPresent(resultado::id);
+        return Part.builder().functionResponse(resultado.build()).build();
     }
 
-    private static String extraerTexto(BetaMessage respuesta) {
+    private static String extraerTexto(Content contenido) {
         StringBuilder texto = new StringBuilder();
-        for (BetaContentBlock bloque : respuesta.content()) {
-            bloque.text().ifPresent(t -> {
-                if (!texto.isEmpty()) {
-                    texto.append("\n\n");
-                }
-                texto.append(t.text());
-            });
+        for (Part parte : contenido.parts().orElse(List.of())) {
+            // se omiten las partes de razonamiento interno del modelo
+            if (parte.thought().orElse(false)) {
+                continue;
+            }
+            parte.text().ifPresent(texto::append);
         }
-        return texto.toString();
+        return texto.toString().trim();
     }
 }

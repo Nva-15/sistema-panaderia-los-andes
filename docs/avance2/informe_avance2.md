@@ -31,16 +31,16 @@ sequenceDiagram
     actor U as Usuario
     participant W as Pantalla del asistente
     participant S as Spring Boot (AsistenteIAService)
-    participant C as Claude (API de Anthropic)
+    participant C as Google Gemini (API)
     participant DB as MySQL (Aiven)
 
     U->>W: "¿Cuánto vendimos esta semana?"
     W->>S: POST /api/asistente/chat
     S->>C: Prompt de sistema + pregunta + herramientas
-    C-->>S: tool_use: consultar_ventas(2026-10-26, 2026-10-31)
+    C-->>S: functionCall: consultar_ventas(2026-10-26, 2026-10-31)
     S->>DB: Consulta de ventas (solo lectura)
     DB-->>S: Filas de ventas
-    S->>C: tool_result con los datos
+    S->>C: functionResponse con los datos
     C-->>S: Respuesta redactada con cifras reales
     S-->>W: Texto (tabla en Markdown)
     W-->>U: Respuesta formateada
@@ -52,7 +52,7 @@ sequenceDiagram
 |---|---|---|
 | Pantalla de chat | `templates/vista/asistente.html`, `static/js/asistente.js` | Conversación, botones de acciones rápidas, render seguro de tablas |
 | Controlador | `controllers/AsistenteController.java` | `GET /principal/asistente` y `POST /api/asistente/chat` |
-| Servicio de IA | `services/AsistenteIAService.java` | Llama a Claude con el SDK oficial y ejecuta el ciclo de herramientas |
+| Servicio de IA | `services/AsistenteIAService.java` | Llama a Gemini con el SDK oficial y ejecuta el ciclo de *function calling* |
 | Herramientas | `services/HerramientasAsistente.java` | `consultar_ventas` y `consultar_inventario` (solo lectura) |
 | Banco de prompts | `services/PromptsAsistente.java` y [`banco_prompts.md`](banco_prompts.md) | Prompts zero-shot, few-shot y one-shot |
 
@@ -60,11 +60,11 @@ sequenceDiagram
 
 | Decisión | Elección | Justificación |
 |---|---|---|
-| Modelo | Claude Opus 5.5 (`claude-opus-5-5`), configurable con `ANTHROPIC_MODEL` | Modelo actual de Anthropic con buen razonamiento para cálculos (plan de producción) y uso de herramientas |
-| Integración | SDK oficial `anthropic-java` 3.2.0 | Tipado, reintentos automáticos y manejo de errores incluidos |
-| Acceso a datos | *Tool use* (function calling) | La IA obtiene cifras reales; no se le entregan tablas completas ni puede ejecutar SQL |
-| Esfuerzo de razonamiento | `medium` (configurable con `ANTHROPIC_EFFORT`) | Balance entre calidad y costo para consultas cotidianas |
-| Rechazos | `fallbacks: "default"` | Si el modelo rechaza una solicitud legítima, la API la reintenta con el modelo alternativo recomendado |
+| Proveedor | Google Gemini (API de Google AI Studio) | Tiene **plan gratuito** sin tarjeta de crédito, suficiente para el volumen de una panadería y para el proyecto académico |
+| Modelo | `gemini-flash-latest` (alias del modelo Flash más reciente), configurable con `GEMINI_MODEL` | Rápido, admite *function calling* y está incluido en el plan gratuito; el alias evita que el sistema falle cuando Google retire una versión |
+| Integración | SDK oficial `google-genai` 1.78.0 para Java | Tipado, manejo de errores y de las firmas de razonamiento (`thoughtSignature`) incluido |
+| Acceso a datos | *Function calling* (uso de herramientas) | La IA obtiene cifras reales; no se le entregan tablas completas ni puede ejecutar SQL |
+| Bloqueos de seguridad | Se revisan `promptFeedback.blockReason` y `finishReason` | Si Gemini bloquea una solicitud, el usuario recibe un mensaje claro en vez de un error |
 
 ## 4. Diseño de prompts
 
@@ -84,8 +84,8 @@ Detallado en el [Banco de Prompts](banco_prompts.md). Resumen:
 | Aspecto | Análisis |
 |---|---|
 | **Técnica** | Integrado al sistema existente sin cambiar la base de datos; usa el SDK oficial. Validado con 9 pruebas automáticas (herramientas y controlador) y con una simulación completa del ciclo de herramientas. |
-| **Económica** | Pago por uso de la API. Cada consulta procesa unos pocos miles de tokens; el costo por consulta es de centavos de dólar. Se puede reducir aún más cambiando a `claude-haiku-5-5` mediante la variable `ANTHROPIC_MODEL`, sin tocar código. |
-| **Seguridad** | API key solo como variable de entorno en Render (nunca en GitHub); herramientas de solo lectura; requiere sesión iniciada; el texto de la IA se muestra escapado (sin riesgo de inyección de HTML). |
+| **Económica** | **Costo cero**: se usa el plan gratuito de la API de Gemini. Tiene límites de consultas por minuto y por día (ver Google AI Studio), suficientes para el uso de la panadería y la demostración; si se superan, el asistente avisa y se puede reintentar más tarde. Si el negocio creciera, bastaría activar la facturación sin cambiar código. |
+| **Seguridad y privacidad** | API key solo como variable de entorno en Render (nunca en GitHub); herramientas de solo lectura; requiere sesión iniciada; el texto de la IA se muestra escapado (sin riesgo de inyección de HTML). En el plan gratuito Google puede usar los datos enviados para mejorar sus productos (revisar los términos vigentes): solo se envían resúmenes de ventas e inventario, nunca datos personales de clientes ni contraseñas. |
 | **Operativa** | Si la IA no está configurada o falla, el resto del sistema sigue funcionando y el asistente muestra un mensaje claro. |
 | **Limitaciones** | Depende de la calidad de los datos registrados; las respuestas deben verificarse con los reportes para decisiones importantes; requiere conexión a internet. |
 
@@ -100,12 +100,11 @@ Variables de entorno en Render (*Environment*):
 
 | Variable | Valor |
 |---|---|
-| `ANTHROPIC_API_KEY` | API key creada en https://console.anthropic.com |
-| `ANTHROPIC_MODEL` | Opcional. Por defecto `claude-opus-5-5` |
-| `ANTHROPIC_EFFORT` | Opcional. `low`, `medium` (por defecto) o `high` |
+| `GEMINI_API_KEY` | API key gratuita creada en https://aistudio.google.com (*Get API key*) |
+| `GEMINI_MODEL` | Opcional. Por defecto `gemini-flash-latest` |
 
 ## 8. Referencias
 
-- Anthropic. *Claude API Documentation – Tool use*. https://docs.claude.com
-- Anthropic. *Prompt engineering overview*. https://docs.claude.com
+- Google. *Gemini API – Function calling*. https://ai.google.dev/gemini-api/docs/function-calling
+- Google. *Gemini API – Prompt design strategies*. https://ai.google.dev/gemini-api/docs/prompting-strategies
 - Brown, T. et al. (2020). *Language Models are Few-Shot Learners*. NeurIPS.

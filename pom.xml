@@ -112,11 +112,11 @@
 			<artifactId>itextpdf</artifactId>
 			<version>5.5.13.2</version>
 		</dependency>
-		<!-- SDK oficial de Anthropic para el asistente de IA (Claude) -->
+		<!-- SDK oficial de Google para el asistente de IA (Gemini, plan gratuito) -->
 		<dependency>
-			<groupId>com.anthropic</groupId>
-			<artifactId>anthropic-java</artifactId>
-			<version>3.2.0</version>
+			<groupId>com.google.genai</groupId>
+			<artifactId>google-genai</artifactId>
+			<version>1.78.0</version>
 		</dependency>
 	</dependencies>
 

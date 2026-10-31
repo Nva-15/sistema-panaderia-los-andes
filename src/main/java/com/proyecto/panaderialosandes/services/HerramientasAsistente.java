@@ -10,8 +10,7 @@ import java.util.TreeMap;
 
 import org.springframework.stereotype.Service;
 
-import com.anthropic.core.JsonValue;
-import com.anthropic.models.beta.messages.BetaTool;
+import com.google.genai.types.FunctionDeclaration;
 import com.proyecto.panaderialosandes.models.Productos;
 
 // herramientas (tool use) que el asistente de IA puede llamar para consultar datos reales del sistema.
@@ -31,39 +30,33 @@ public class HerramientasAsistente {
     }
 
     // definicion de las herramientas que se envian al modelo (nombre, descripcion y esquema JSON de entrada)
-    public List<BetaTool> definiciones() {
-        BetaTool ventas = BetaTool.builder()
+    public List<FunctionDeclaration> definiciones() {
+        FunctionDeclaration ventas = FunctionDeclaration.builder()
                 .name(CONSULTAR_VENTAS)
                 .description("Consulta las ventas registradas en el sistema entre dos fechas (inclusive). "
                         + "Devuelve el total vendido en soles, las unidades y el monto por producto, y el detalle por dia. "
                         + "Usala para preguntas sobre ventas, productos mas vendidos o para estimar la produccion.")
-                .inputSchema(BetaTool.InputSchema.builder()
-                        .properties(BetaTool.InputSchema.Properties.builder()
-                                .putAdditionalProperty("fecha_desde", JsonValue.from(Map.of(
-                                        "type", "string", "description", "Fecha inicial en formato AAAA-MM-DD")))
-                                .putAdditionalProperty("fecha_hasta", JsonValue.from(Map.of(
-                                        "type", "string", "description", "Fecha final en formato AAAA-MM-DD")))
-                                .putAdditionalProperty("producto", JsonValue.from(Map.of(
-                                        "type", "string",
-                                        "description", "Opcional: parte del nombre de un producto para filtrar, ej. 'pan frances'")))
-                                .build())
-                        .required(List.of("fecha_desde", "fecha_hasta"))
-                        .build())
+                .parametersJsonSchema(Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "fecha_desde", Map.of("type", "string", "description", "Fecha inicial en formato AAAA-MM-DD"),
+                                "fecha_hasta", Map.of("type", "string", "description", "Fecha final en formato AAAA-MM-DD"),
+                                "producto", Map.of("type", "string",
+                                        "description", "Opcional: parte del nombre de un producto para filtrar, ej. 'pan frances'")),
+                        "required", List.of("fecha_desde", "fecha_hasta")))
                 .build();
 
-        BetaTool inventario = BetaTool.builder()
+        FunctionDeclaration inventario = FunctionDeclaration.builder()
                 .name(CONSULTAR_INVENTARIO)
                 .description("Consulta el inventario actual de productos terminados: nombre, categoria, stock, precio y estado. "
                         + "Un producto tiene stock bajo si le quedan 10 unidades o menos.")
-                .inputSchema(BetaTool.InputSchema.builder()
-                        .properties(BetaTool.InputSchema.Properties.builder()
-                                .putAdditionalProperty("filtro", JsonValue.from(Map.of(
-                                        "type", "string",
+                .parametersJsonSchema(Map.of(
+                        "type", "object",
+                        "properties", Map.of(
+                                "filtro", Map.of("type", "string",
                                         "enum", List.of("todos", "stock_bajo", "agotado", "inactivos"),
-                                        "description", "Que productos devolver")))
-                                .build())
-                        .required(List.of("filtro"))
-                        .build())
+                                        "description", "Que productos devolver")),
+                        "required", List.of("filtro")))
                 .build();
 
         return List.of(ventas, inventario);

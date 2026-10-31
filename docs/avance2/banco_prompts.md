@@ -20,7 +20,7 @@ Todos los prompts comparten una estructura base (prompt de sistema):
 | **Reglas** | Responder en español, breve; consultar herramientas antes de dar cifras; no inventar datos; montos en S/ con dos decimales; solo lectura; rechazar temas ajenos al negocio | Reduce alucinaciones y mantiene el foco |
 | **Herramientas** | `consultar_ventas`, `consultar_inventario` | La IA obtiene datos reales del sistema en vez de inventarlos |
 
-### Herramientas disponibles (tool use / function calling)
+### Herramientas disponibles (function calling)
 
 | Herramienta | Parámetros | Devuelve |
 |---|---|---|
