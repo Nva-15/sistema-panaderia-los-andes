@@ -12,7 +12,7 @@
 	<artifactId>panaderialosandes</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>panaderialosandes</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Sistema de gestion de ventas e inventario - Panaderia Pasteleria Los Andes</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -57,6 +57,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Pruebas: seguridad simulada y base de datos en memoria (no necesita MySQL) -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
 
