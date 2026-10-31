@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-// sin GEMINI_API_KEY (como en las pruebas) el asistente debe avisar que no esta configurado, sin romper el sistema
+// sin GROQ_API_KEY ni GEMINI_API_KEY (como en las pruebas) el asistente debe avisar que no esta configurado, sin romper el sistema
 @SpringBootTest
 @AutoConfigureMockMvc
 class AsistenteControllerTest {
@@ -28,7 +28,7 @@ class AsistenteControllerTest {
         mockMvc.perform(get("/principal/asistente").with(user("vende").roles("VENDEDOR")))
                 .andExpect(status().isOk())
                 .andExpect(content().string(Matchers.containsString("Asistente Los Andes")))
-                .andExpect(content().string(Matchers.containsString("GEMINI_API_KEY")));
+                .andExpect(content().string(Matchers.containsString("GROQ_API_KEY")));
     }
 
     @Test

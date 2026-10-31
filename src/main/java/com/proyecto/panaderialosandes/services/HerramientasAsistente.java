@@ -29,37 +29,60 @@ public class HerramientasAsistente {
         this.productoService = productoService;
     }
 
+    // descripcion de una herramienta, independiente del proveedor de IA
+    public record Herramienta(String nombre, String descripcion, Map<String, Object> parametros) {
+    }
+
     // definicion de las herramientas que se envian al modelo (nombre, descripcion y esquema JSON de entrada)
-    public List<FunctionDeclaration> definiciones() {
-        FunctionDeclaration ventas = FunctionDeclaration.builder()
-                .name(CONSULTAR_VENTAS)
-                .description("Consulta las ventas registradas en el sistema entre dos fechas (inclusive). "
+    public List<Herramienta> herramientas() {
+        Herramienta ventas = new Herramienta(CONSULTAR_VENTAS,
+                "Consulta las ventas registradas en el sistema entre dos fechas (inclusive). "
                         + "Devuelve el total vendido en soles, las unidades y el monto por producto, y el detalle por dia. "
-                        + "Usala para preguntas sobre ventas, productos mas vendidos o para estimar la produccion.")
-                .parametersJsonSchema(Map.of(
+                        + "Usala para preguntas sobre ventas, productos mas vendidos o para estimar la produccion.",
+                Map.of(
                         "type", "object",
                         "properties", Map.of(
                                 "fecha_desde", Map.of("type", "string", "description", "Fecha inicial en formato AAAA-MM-DD"),
                                 "fecha_hasta", Map.of("type", "string", "description", "Fecha final en formato AAAA-MM-DD"),
                                 "producto", Map.of("type", "string",
                                         "description", "Opcional: parte del nombre de un producto para filtrar, ej. 'pan frances'")),
-                        "required", List.of("fecha_desde", "fecha_hasta")))
-                .build();
+                        "required", List.of("fecha_desde", "fecha_hasta")));
 
-        FunctionDeclaration inventario = FunctionDeclaration.builder()
-                .name(CONSULTAR_INVENTARIO)
-                .description("Consulta el inventario actual de productos terminados: nombre, categoria, stock, precio y estado. "
-                        + "Un producto tiene stock bajo si le quedan 10 unidades o menos.")
-                .parametersJsonSchema(Map.of(
+        Herramienta inventario = new Herramienta(CONSULTAR_INVENTARIO,
+                "Consulta el inventario actual de productos terminados: nombre, categoria, stock, precio y estado. "
+                        + "Un producto tiene stock bajo si le quedan 10 unidades o menos.",
+                Map.of(
                         "type", "object",
                         "properties", Map.of(
                                 "filtro", Map.of("type", "string",
                                         "enum", List.of("todos", "stock_bajo", "agotado", "inactivos"),
                                         "description", "Que productos devolver")),
-                        "required", List.of("filtro")))
-                .build();
+                        "required", List.of("filtro")));
 
         return List.of(ventas, inventario);
+    }
+
+    // formato de Google Gemini
+    public List<FunctionDeclaration> definicionesGemini() {
+        return herramientas().stream()
+                .map(h -> FunctionDeclaration.builder()
+                        .name(h.nombre())
+                        .description(h.descripcion())
+                        .parametersJsonSchema(h.parametros())
+                        .build())
+                .toList();
+    }
+
+    // formato compatible con OpenAI (Groq)
+    public List<Map<String, Object>> definicionesOpenAI() {
+        return herramientas().stream()
+                .map(h -> Map.<String, Object>of(
+                        "type", "function",
+                        "function", Map.of(
+                                "name", h.nombre(),
+                                "description", h.descripcion(),
+                                "parameters", h.parametros())))
+                .toList();
     }
 
     // ejecuta la herramienta pedida por el modelo y devuelve el resultado como datos (se serializan a JSON)

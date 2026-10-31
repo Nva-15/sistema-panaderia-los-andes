@@ -10,6 +10,20 @@ public final class AsistenteDto {
 
     // un mensaje del chat: rol "usuario" o "asistente"
     public record Mensaje(String rol, String texto) {
+
+        public boolean esDelAsistente() {
+            return "asistente".equals(rol);
+        }
+    }
+
+    // ultimos mensajes con texto del historial (para no enviar conversaciones demasiado largas)
+    public static List<Mensaje> recientes(List<Mensaje> historial, int maximo) {
+        if (historial == null) {
+            return List.of();
+        }
+        return historial.subList(Math.max(0, historial.size() - maximo), historial.size()).stream()
+                .filter(m -> m.texto() != null && !m.texto().isBlank())
+                .toList();
     }
 
     // peticion: modo (CHAT, PLAN_PRODUCCION, PROMOCION) y el historial de la conversacion

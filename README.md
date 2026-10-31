@@ -16,7 +16,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 | Base de datos | MySQL 8 |
 | Reportes | iText (PDF), Apache POI (Excel), CSV |
 | DevOps | Git/GitHub, GitHub Actions, Docker, Render |
-| Inteligencia Artificial | Google Gemini (plan gratuito) con el SDK oficial `google-genai`, *function calling* |
+| Inteligencia Artificial | Groq o Google Gemini (planes gratuitos), *function calling* |
 
 ## Módulos
 
@@ -24,7 +24,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 - **Productos e inventario:** alta, búsqueda, edición de stock, activar/desactivar, filtros (agotado, stock bajo).
 - **Reportes:** inventario (PDF y Excel) y ventas por fecha, categoría y usuario (CSV).
 - **Usuarios:** roles `ADMIN` y `VENDEDOR`, contraseñas cifradas con BCrypt.
-- **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Google Gemini, plan gratuito).
+- **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Groq o Google Gemini, planes gratuitos).
 
 ## Cómo ejecutarlo
 
@@ -59,7 +59,10 @@ Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin1
 | `DB_USERNAME` / `DB_PASSWORD` | Credenciales de la base de datos |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Administrador inicial; solo se crea si no existen usuarios |
 | `PORT` | Puerto del servidor (por defecto 8081; Render lo asigna solo) |
-| `GEMINI_API_KEY` | API key gratuita de Google AI Studio para el asistente de IA (sin ella el asistente queda deshabilitado) |
+| `GROQ_API_KEY` | API key gratuita de https://console.groq.com para el asistente de IA (proveedor preferido) |
+| `GROQ_MODEL` | Opcional. Modelo de Groq (por defecto `openai/gpt-oss-120b`; si no existe, se elige otro disponible automáticamente) |
+| `GEMINI_API_KEY` | Alternativa: API key gratuita de Google AI Studio. Sin ninguna key el asistente queda deshabilitado |
+| `IA_PROVEEDOR` | Opcional. `groq`, `gemini` o `auto` (por defecto: Groq si tiene key, si no Gemini) |
 | `GEMINI_MODEL` | Opcional. Modelo de Gemini (por defecto `gemini-flash-latest`, el Flash más reciente) |
 | `GEMINI_THINKING` | Opcional. Nivel de razonamiento: `MINIMAL`, `LOW` (por defecto, más rápido), `MEDIUM` o `HIGH` |
 

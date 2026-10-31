@@ -31,7 +31,7 @@ sequenceDiagram
     actor U as Usuario
     participant W as Pantalla del asistente
     participant S as Spring Boot (AsistenteIAService)
-    participant C as Google Gemini (API)
+    participant C as Groq / Gemini (API)
     participant DB as MySQL (Aiven)
 
     U->>W: "¿Cuánto vendimos esta semana?"
@@ -52,7 +52,7 @@ sequenceDiagram
 |---|---|---|
 | Pantalla de chat | `templates/vista/asistente.html`, `static/js/asistente.js` | Conversación, botones de acciones rápidas, render seguro de tablas |
 | Controlador | `controllers/AsistenteController.java` | `GET /principal/asistente` y `POST /api/asistente/chat` |
-| Servicio de IA | `services/AsistenteIAService.java` | Llama a Gemini con el SDK oficial y ejecuta el ciclo de *function calling* |
+| Servicio de IA | `services/AsistenteIAService.java` | Elige el proveedor (Groq o Gemini) y ejecuta el ciclo de *function calling* (`services/ia/`) |
 | Herramientas | `services/HerramientasAsistente.java` | `consultar_ventas` y `consultar_inventario` (solo lectura) |
 | Banco de prompts | `services/PromptsAsistente.java` y [`banco_prompts.md`](banco_prompts.md) | Prompts zero-shot, few-shot y one-shot |
 
@@ -60,12 +60,13 @@ sequenceDiagram
 
 | Decisión | Elección | Justificación |
 |---|---|---|
-| Proveedor | Google Gemini (API de Google AI Studio) | Tiene **plan gratuito** sin tarjeta de crédito, suficiente para el volumen de una panadería y para el proyecto académico |
-| Modelo | `gemini-flash-latest` (alias del modelo Flash más reciente), configurable con `GEMINI_MODEL` | Rápido, admite *function calling* y está incluido en el plan gratuito; el alias evita que el sistema falle cuando Google retire una versión |
-| Integración | SDK oficial `google-genai` 1.78.0 para Java | Tipado, manejo de errores y de las firmas de razonamiento (`thoughtSignature`) incluido |
+| Proveedor principal | **Groq** (API compatible con OpenAI) | Plan gratuito sin tarjeta, con más consultas diarias que Gemini y respuestas muy rápidas (hardware LPU) |
+| Proveedor alternativo | **Google Gemini** (SDK oficial `google-genai`) | También gratuito; se activa cambiando una variable de entorno si se agota la cuota de Groq |
+| Modelo | `openai/gpt-oss-120b` en Groq (configurable con `GROQ_MODEL`) | Modelo abierto con buen uso de herramientas; si Groq lo retira, el sistema elige automáticamente otro modelo disponible |
 | Acceso a datos | *Function calling* (uso de herramientas) | La IA obtiene cifras reales; no se le entregan tablas completas ni puede ejecutar SQL |
-| Velocidad de respuesta | Nivel de razonamiento `LOW` (configurable con `GEMINI_THINKING`) | Los modelos Flash recientes "piensan" antes de responder; un nivel bajo reduce la espera en consultas simples. Si el modelo no admite el ajuste, el sistema lo omite automáticamente |
-| Bloqueos de seguridad | Se revisan `promptFeedback.blockReason` y `finishReason` | Si Gemini bloquea una solicitud, el usuario recibe un mensaje claro en vez de un error |
+| Arquitectura | Interfaz `ProveedorIA` con dos implementaciones (`GroqProveedor`, `GeminiProveedor`) | Los prompts y las herramientas son los mismos; cambiar de proveedor no requiere modificar código |
+
+**Lección aprendida (iteración):** la primera versión usó Gemini, pero su plan gratuito para el modelo Flash más reciente permite solo **5 consultas por minuto y 20 por día**, y cada pregunta consume al menos 2 (pedido de datos + respuesta). La cuota se agotó durante las pruebas, por lo que se incorporó Groq como proveedor principal manteniendo Gemini como respaldo.
 
 ## 4. Diseño de prompts
 
@@ -85,7 +86,7 @@ Detallado en el [Banco de Prompts](banco_prompts.md). Resumen:
 | Aspecto | Análisis |
 |---|---|
 | **Técnica** | Integrado al sistema existente sin cambiar la base de datos; usa el SDK oficial. Validado con 9 pruebas automáticas (herramientas y controlador) y con una simulación completa del ciclo de herramientas. |
-| **Económica** | **Costo cero**: se usa el plan gratuito de la API de Gemini. Tiene límites de consultas por minuto y por día (ver Google AI Studio), suficientes para el uso de la panadería y la demostración; si se superan, el asistente avisa y se puede reintentar más tarde. Si el negocio creciera, bastaría activar la facturación sin cambiar código. |
+| **Económica** | **Costo cero**: se usan los planes gratuitos de Groq y Gemini. Tiene límites de consultas por minuto y por día (ver Google AI Studio), suficientes para el uso de la panadería y la demostración; si se superan, el asistente avisa y se puede reintentar más tarde. Si el negocio creciera, bastaría activar la facturación sin cambiar código. |
 | **Seguridad y privacidad** | API key solo como variable de entorno en Render (nunca en GitHub); herramientas de solo lectura; requiere sesión iniciada; el texto de la IA se muestra escapado (sin riesgo de inyección de HTML). En el plan gratuito Google puede usar los datos enviados para mejorar sus productos (revisar los términos vigentes): solo se envían resúmenes de ventas e inventario, nunca datos personales de clientes ni contraseñas. |
 | **Operativa** | Si la IA no está configurada o falla, el resto del sistema sigue funcionando y el asistente muestra un mensaje claro. |
 | **Limitaciones** | Depende de la calidad de los datos registrados; las respuestas deben verificarse con los reportes para decisiones importantes; requiere conexión a internet. |
@@ -101,12 +102,16 @@ Variables de entorno en Render (*Environment*):
 
 | Variable | Valor |
 |---|---|
-| `GEMINI_API_KEY` | API key gratuita creada en https://aistudio.google.com (*Get API key*) |
+| `GROQ_API_KEY` | API key gratuita creada en https://console.groq.com (*API Keys*) |
+| `GROQ_MODEL` | Opcional. Por defecto `openai/gpt-oss-120b` |
+| `GEMINI_API_KEY` | Alternativa: API key gratuita de https://aistudio.google.com |
+| `IA_PROVEEDOR` | Opcional. `groq`, `gemini` o `auto` |
 | `GEMINI_MODEL` | Opcional. Por defecto `gemini-flash-latest` |
 | `GEMINI_THINKING` | Opcional. `MINIMAL`, `LOW` (por defecto), `MEDIUM` o `HIGH`. Menos razonamiento = respuestas más rápidas |
 
 ## 8. Referencias
 
+- Groq. *Tool Use*. https://console.groq.com/docs/tool-use
 - Google. *Gemini API – Function calling*. https://ai.google.dev/gemini-api/docs/function-calling
 - Google. *Gemini API – Prompt design strategies*. https://ai.google.dev/gemini-api/docs/prompting-strategies
 - Brown, T. et al. (2020). *Language Models are Few-Shot Learners*. NeurIPS.
