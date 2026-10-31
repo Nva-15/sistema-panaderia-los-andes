@@ -1,0 +1,70 @@
+.icono-asistente {
+    color: #8b6a4e;
+}
+
+.chat {
+    height: 60vh;
+    overflow-y: auto;
+    background-color: #faf7f2;
+}
+
+.mensaje {
+    display: flex;
+    margin-bottom: 12px;
+}
+
+.mensaje.usuario {
+    justify-content: flex-end;
+}
+
+.burbuja {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.mensaje.usuario .burbuja {
+    background-color: #5c3a1e;
+    color: #fff;
+    border-bottom-right-radius: 2px;
+}
+
+.mensaje.asistente .burbuja {
+    background-color: #fff;
+    border: 1px solid #e6ddd2;
+    border-bottom-left-radius: 2px;
+}
+
+.mensaje.error .burbuja {
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.burbuja table {
+    background-color: #fff;
+    font-size: 0.9rem;
+}
+
+.burbuja ul,
+.burbuja ol {
+    margin-bottom: 4px;
+    padding-left: 20px;
+}
+
+.burbuja .espacio {
+    height: 6px;
+}
+
+.nota-herramientas {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: #8a8a8a;
+}
+
+@media (max-width: 576px) {
+    .burbuja {
+        max-width: 95%;
+    }
+}
