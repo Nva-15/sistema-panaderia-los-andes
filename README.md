@@ -16,6 +16,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 | Base de datos | MySQL 8 |
 | Reportes | iText (PDF), Apache POI (Excel), CSV |
 | DevOps | Git/GitHub, GitHub Actions, Docker, Render |
+| Inteligencia Artificial | Claude (API de Anthropic) con el SDK oficial `anthropic-java`, *tool use* |
 
 ## Módulos
 
@@ -23,6 +24,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 - **Productos e inventario:** alta, búsqueda, edición de stock, activar/desactivar, filtros (agotado, stock bajo).
 - **Reportes:** inventario (PDF y Excel) y ventas por fecha, categoría y usuario (CSV).
 - **Usuarios:** roles `ADMIN` y `VENDEDOR`, contraseñas cifradas con BCrypt.
+- **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Claude, de Anthropic).
 
 ## Cómo ejecutarlo
 
@@ -57,6 +59,9 @@ Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin1
 | `DB_USERNAME` / `DB_PASSWORD` | Credenciales de la base de datos |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Administrador inicial; solo se crea si no existen usuarios |
 | `PORT` | Puerto del servidor (por defecto 8081; Render lo asigna solo) |
+| `ANTHROPIC_API_KEY` | API key de Anthropic para el asistente de IA (sin ella el asistente queda deshabilitado) |
+| `ANTHROPIC_MODEL` | Opcional. Modelo de Claude (por defecto `claude-opus-5-5`) |
+| `ANTHROPIC_EFFORT` | Opcional. Nivel de razonamiento: `low`, `medium` (por defecto) o `high` |
 
 > El archivo `.env` **no se sube a GitHub**. En la nube las credenciales se configuran en el panel de Render y en los *Secrets* de GitHub.
 
@@ -97,3 +102,4 @@ Desde ese momento, cada cambio que llega a `main` y pasa las pruebas se publica 
 ## Documentación
 
 - [Avance 1 – Diagnóstico, arquitectura y DevOps](docs/avance1/informe_avance1.md)
+- [Avance 2 – Inteligencia Artificial y Prompt Engineering](docs/avance2/informe_avance2.md) · [Banco de prompts](docs/avance2/banco_prompts.md)
