@@ -17,6 +17,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 | Reportes | iText (PDF), Apache POI (Excel), CSV |
 | DevOps | Git/GitHub, GitHub Actions, Docker, Render |
 | Inteligencia Artificial | Groq o Google Gemini (planes gratuitos), *function calling* |
+| IoT | ESP32 (Wokwi), MQTT (HiveMQ + Eclipse Paho), Chart.js |
 
 ## Módulos
 
@@ -25,6 +26,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 - **Reportes:** inventario (PDF y Excel) y ventas por fecha, categoría y usuario (CSV).
 - **Usuarios:** roles `ADMIN` y `VENDEDOR`, contraseñas cifradas con BCrypt.
 - **Asistente IA:** chat que responde preguntas sobre ventas e inventario con datos reales, genera el plan de producción del día siguiente y la promoción del día para redes (Groq o Google Gemini, planes gratuitos).
+- **Monitoreo IoT:** dashboard en tiempo real con los sensores del ESP32 (vitrina, bandeja de pan, puerta del almacén y clientes) recibidos por MQTT, gráficos y alertas. Ver [iot/README.md](iot/README.md).
 
 ## Cómo ejecutarlo
 
@@ -62,6 +64,10 @@ Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin1
 | `GROQ_API_KEY` | API key gratuita de https://console.groq.com para el asistente de IA (proveedor preferido) |
 | `GROQ_MODEL` | Opcional. Modelo de Groq (por defecto `openai/gpt-oss-120b`; si no existe, se elige otro disponible automáticamente) |
 | `GEMINI_API_KEY` | Alternativa: API key gratuita de Google AI Studio. Sin ninguna key el asistente queda deshabilitado |
+| `MQTT_SERVIDOR` | Opcional. Broker MQTT (por defecto `tcp://broker.hivemq.com:1883`) |
+| `MQTT_TOPICO_BASE` | Opcional. Tópico base del ESP32 (por defecto `losandes/utpgrupo03`) |
+| `MQTT_USUARIO` / `MQTT_CLAVE` | Opcional. Credenciales si el broker las requiere |
+| `IOT_API_KEY` | Opcional. Habilita la entrada HTTP alternativa `/api/iot/telemetria` |
 | `IA_PROVEEDOR` | Opcional. `groq`, `gemini` o `auto` (por defecto: Groq si tiene key, si no Gemini) |
 | `GEMINI_MODEL` | Opcional. Modelo de Gemini (por defecto `gemini-flash-latest`, el Flash más reciente) |
 | `GEMINI_THINKING` | Opcional. Nivel de razonamiento: `MINIMAL`, `LOW` (por defecto, más rápido), `MEDIUM` o `HIGH` |
@@ -106,3 +112,4 @@ Desde ese momento, cada cambio que llega a `main` y pasa las pruebas se publica 
 
 - [Avance 1 – Diagnóstico, arquitectura y DevOps](docs/avance1/informe_avance1.md)
 - [Avance 2 – Inteligencia Artificial y Prompt Engineering](docs/avance2/informe_avance2.md) · [Banco de prompts](docs/avance2/banco_prompts.md)
+- [Avance 3 – Solución IoT](docs/avance3/informe_avance3.md) · [Prototipo ESP32](iot/README.md)
