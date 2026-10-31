@@ -133,11 +133,13 @@ public class AsistenteIAService {
             return AsistenteDto.Respuesta.error("La consulta necesito demasiados pasos. Intenta una pregunta mas concreta.");
         } catch (ApiException e) {
             logger.error("Error de la API de IA (HTTP {}): {}", e.code(), e.message());
+            // se muestra el detalle que envia Google (cuota, modelo, clave) para poder diagnosticar el problema
+            String detalle = " Detalle de Google (HTTP " + e.code() + "): " + resumir(e.message());
             if (e.code() == 429) {
                 return AsistenteDto.Respuesta.error(
-                        "Se alcanzo el limite gratuito de consultas por minuto o por dia. Intenta en un momento.");
+                        "Se alcanzo el limite gratuito de consultas del modelo " + modelo + "." + detalle);
             }
-            return AsistenteDto.Respuesta.error("El servicio de IA respondio con un error. Intenta nuevamente.");
+            return AsistenteDto.Respuesta.error("El servicio de IA respondio con un error." + detalle);
         } catch (GenAiIOException e) {
             logger.error("No se pudo conectar con la API de IA", e);
             return AsistenteDto.Respuesta.error("No se pudo conectar con el servicio de IA. Revisa la conexion.");
@@ -209,7 +211,14 @@ public class AsistenteIAService {
         return Part.builder().functionResponse(resultado.build()).build();
     }
 
-    private static String extraerTexto(Content contenido) {
+    private static String resumir(String mensaje) {
+        if (mensaje == null) {
+            return "sin detalle";
+        }
+        return mensaje.length() > 400 ? mensaje.substring(0, 400) + "..." : mensaje;
+    }
+
+        private static String extraerTexto(Content contenido) {
         StringBuilder texto = new StringBuilder();
         for (Part parte : contenido.parts().orElse(List.of())) {
             // se omiten las partes de razonamiento interno del modelo
