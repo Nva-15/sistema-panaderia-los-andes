@@ -79,6 +79,13 @@ public class IotController {
         return estado;
     }
 
+    // cantidad de alertas pendientes (contador del menu lateral)
+    @GetMapping("/api/iot/pendientes")
+    @ResponseBody
+    public Map<String, Object> pendientes() {
+        return Map.of("pendientes", iotService.alertasPendientes());
+    }
+
     @PostMapping("/api/iot/alertas/{id}/atender")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> atenderAlerta(@PathVariable Long id) {

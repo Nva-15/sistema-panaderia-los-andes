@@ -1,67 +1,91 @@
-<header th:fragment="miCabecera" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<!-- menu lateral + barra superior. Cada opcion se muestra segun el rol (ADMIN / VENDEDOR) -->
+<div class="app-marco" th:fragment="miCabecera" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+  <aside class="lateral" id="menuLateral">
+    <a class="marca" th:href="@{/principal/inicio}">
+      <img th:src="@{/imagenes/logo-de-la-panaderia.png}" alt="Panadería Los Andes">
+      <div><strong>Los Andes</strong><small>PANADERÍA</small></div>
+    </a>
 
-  <div class="cabecera">
-    <a th:href="@{/principal/inicio}"><img th:src="@{/imagenes/logo-de-la-panaderia.png}" class="logo-imagen"
-        alt="..."></a>
-    <div class="titulo d-flex flex-column justify-content-end align-items-end">
-      <h1>Panadería Pastelería Los Andes</h1>
-      <div class="d-flex flex-column align-items-end">
-        <p class="m-0"><i class="fa-solid fa-user-tie me-3"></i><span id="nombreUsuario"></span></p>
-        <p class=""><i class="fa-solid fa-address-book me-2"></i><span id="rolUsuario"></span></p>
-        <a th:href="@{/logout}" class="btn btn-danger botonCerrar small py-0"><i class="fas fa-sign-out-alt"></i> Cerrar</a>
+    <div class="grupo">Operación</div>
+    <a class="enlace" th:href="@{/principal/inicio}" data-rutas="/principal/inicio /principal/acceso_denegado" data-grupo="Operación"><i class="fas fa-house"></i>Inicio</a>
+    <a class="enlace" th:href="@{/principal/venta}" data-rutas="/principal/venta" data-grupo="Operación"><i class="fas fa-cash-register"></i>Nueva venta</a>
+    <a class="enlace" th:href="@{/principal/productos}" data-rutas="/principal/productos /productos/buscar /productos/nuevo /productos/guardar" data-grupo="Operación"><i class="fas fa-bread-slice"></i>Productos</a>
+    <a class="enlace" th:href="@{/principal/agregarcliente}" data-rutas="/principal/agregarcliente /principal/guardarcliente" data-grupo="Operación"><i class="fas fa-user-plus"></i>Registrar cliente</a>
+
+    <th:block sec:authorize="hasRole('ADMIN')">
+      <div class="grupo">Reportes</div>
+      <a class="enlace" th:href="@{/principal/reporte_venta}" data-rutas="/principal/reporte_venta" data-grupo="Reportes"><i class="fas fa-chart-line"></i>Reporte de ventas</a>
+      <a class="enlace" th:href="@{/productos/filtros(filtro='todos')}" data-rutas="/productos/filtros /principal/reporte_inventario /productos/cambiar_estado" data-grupo="Reportes"><i class="fas fa-boxes-stacked"></i>Inventario</a>
+    </th:block>
+
+    <div class="grupo">Inteligencia</div>
+    <a class="enlace" th:href="@{/principal/asistente}" data-rutas="/principal/asistente" data-grupo="Inteligencia"><i class="fas fa-robot"></i>Asistente IA</a>
+    <a class="enlace" th:href="@{/principal/iot}" data-rutas="/principal/iot" data-grupo="Inteligencia"><i class="fas fa-microchip"></i>Monitoreo IoT<span id="contadorAlertasIot" class="contador" hidden></span></a>
+    <a class="enlace" th:href="@{/principal/recorrido-vr}" data-rutas="/principal/recorrido-vr" data-grupo="Inteligencia"><i class="fas fa-vr-cardboard"></i>Recorrido VR</a>
+    <a class="enlace" th:href="@{/catalogo}" target="_blank" data-grupo="Inteligencia"><i class="fas fa-cube"></i>Catálogo AR</a>
+
+    <th:block sec:authorize="hasRole('ADMIN')">
+      <div class="grupo">Administración</div>
+      <a class="enlace" th:href="@{/principal/listar_usuarios}" data-rutas="/principal/listar_usuarios /login/nuevo /login/guardar" data-grupo="Administración"><i class="fas fa-users"></i>Usuarios</a>
+      <a class="enlace" th:href="@{/principal/automatizaciones}" data-rutas="/principal/automatizaciones" data-grupo="Administración"><i class="fas fa-gears"></i>Automatizaciones</a>
+      <a class="enlace" th:href="@{/catalogo/qr}" target="_blank" data-grupo="Administración"><i class="fas fa-qrcode"></i>QR para la vitrina</a>
+    </th:block>
+
+    <div class="pie">
+      <a class="enlace" th:href="@{/info/Manual-de-usuario.pdf}" target="_blank"><i class="fas fa-circle-question"></i>Manual de usuario</a>
+      <a class="enlace botonCerrar" th:href="@{/logout}"><i class="fas fa-right-from-bracket"></i>Cerrar sesión</a>
+    </div>
+  </aside>
+  <div class="velo-menu" id="veloMenu"></div>
+
+  <header class="barra-superior">
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-suave btn-icono boton-menu" id="botonMenu" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
+      <div class="miga" id="miga">Panadería Los Andes</div>
+    </div>
+    <div class="usuario">
+      <div class="avatar" sec:authentication="name">U</div>
+      <div class="datos-usuario">
+        <div class="fw-bold" style="line-height:1.1" id="nombreUsuario" sec:authentication="name"></div>
+        <span class="rol" id="rolUsuario" sec:authorize="hasRole('ADMIN')">ADMIN</span>
+        <span class="rol" id="rolUsuario" sec:authorize="!hasRole('ADMIN')">VENDEDOR</span>
       </div>
-
     </div>
-  </div>
+  </header>
 
-  <div class="menu">
-
-    <div class="opcion-desplegable">
-      <a class="lista-del-menu" href="#"><i class="fas fa-folder"></i> Archivo</a>
-      <ul class="menu-desplegable">
-        <li sec:authorize="hasRole('ADMIN')"><a class="item-desplegable" th:href="@{/login/nuevo}"><i class="fas fa-user-plus"></i> Crear Usuario</a>
-        </li>
-        <li sec:authorize="hasRole('ADMIN')"><a class="item-desplegable" th:href="@{/productos/nuevo}"><i class="fas fa-box-open"></i> Agregar
-            Productos</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal/agregarcliente}"><i class="fas fa-user-friends"></i> Agregar
-            Cliente</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal}"><i class="fas fa-sign-out-alt"></i> Salir</a></li>
-      </ul>
-    </div>
-
-    <a th:href="@{/principal/productos}"><i class="fas fa-boxes"></i> Productos</a>
-    <a th:href="@{/principal/venta}"><i class="fas fa-shopping-cart"></i> Ventas</a>
-    <a th:href="@{/principal/asistente}"><i class="fas fa-robot"></i> Asistente IA</a>
-    <div class="opcion-desplegable">
-      <a class="lista-del-menu" href="#"><i class="fas fa-microchip"></i> IoT y 3D</a>
-      <ul class="menu-desplegable">
-        <li><a class="item-desplegable" th:href="@{/principal/iot}"><i class="fas fa-chart-area"></i> Monitoreo IoT</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal/recorrido-vr}"><i class="fas fa-vr-cardboard"></i> Recorrido VR</a></li>
-        <li><a class="item-desplegable" th:href="@{/catalogo}" target="_blank"><i class="fas fa-cube"></i> Catálogo AR</a></li>
-        <li><a class="item-desplegable" th:href="@{/catalogo/qr}" target="_blank"><i class="fas fa-qrcode"></i> QR para la vitrina</a></li>
-      </ul>
-    </div>
-
-    <div class="opcion-desplegable" sec:authorize="hasRole('ADMIN')">
-      <a class="lista-del-menu" href="#"><i class="fas fa-chart-line"></i> Reportes</a>
-      <ul class="menu-desplegable">
-        <li><a class="item-desplegable" th:href="@{/principal/reporte_venta}"><i class="fas fa-file-invoice-dollar"></i>
-            Reporte de ventas</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal/reporte_inventario}"><i class="fas fa-warehouse"></i>
-            Stock de productos</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal/listar_usuarios}"><i class="fas fa-users"></i> Lista de
-            Usuarios</a></li>
-        <li><a class="item-desplegable" th:href="@{/principal/automatizaciones}"><i class="fas fa-gears"></i>
-            Automatizaciones</a></li>
-      </ul>
-    </div>
-
-    <a th:href="@{/info/Manual-de-usuario.pdf}" target="_blank"><i class="fas fa-question-circle"></i> Ayuda</a>
-
-  </div>
-
-
-  <script th:src="@{/js/accionesIniciales.js}"></script>
-
-
-</header>
+  <script>
+    (function () {
+      // opcion activa del menu y ruta de navegacion segun la pagina actual
+      var ruta = window.location.pathname;
+      var mejor = null, largo = 0;
+      document.querySelectorAll('#menuLateral a[data-rutas]').forEach(function (a) {
+        a.dataset.rutas.split(' ').forEach(function (r) {
+          if (ruta.indexOf(r) === 0 && r.length > largo) { mejor = a; largo = r.length; }
+        });
+      });
+      if (mejor) {
+        mejor.classList.add('activo');
+        document.getElementById('miga').innerHTML = '';
+        var grupo = document.createTextNode(mejor.dataset.grupo + ' / ');
+        var actual = document.createElement('b');
+        actual.textContent = mejor.textContent.trim();
+        document.getElementById('miga').append(grupo, actual);
+      }
+      // las iniciales del usuario en el avatar
+      var avatar = document.querySelector('.usuario .avatar');
+      avatar.textContent = (avatar.textContent || 'U').trim().substring(0, 2);
+      // menu lateral en celulares
+      document.getElementById('botonMenu').addEventListener('click', function () { document.body.classList.toggle('menu-abierto'); });
+      document.getElementById('veloMenu').addEventListener('click', function () { document.body.classList.remove('menu-abierto'); });
+      // al cerrar sesion se borra el usuario guardado en el navegador
+      document.querySelector('.botonCerrar').addEventListener('click', function () { try { localStorage.removeItem('usuario'); } catch (e) { } });
+      // cantidad de alertas IoT pendientes junto a "Monitoreo IoT"
+      fetch('/api/iot/pendientes').then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (d && d.pendientes > 0) {
+          var c = document.getElementById('contadorAlertasIot');
+          c.textContent = d.pendientes; c.hidden = false;
+        }
+      }).catch(function () { });
+    })();
+  </script>
+</div>

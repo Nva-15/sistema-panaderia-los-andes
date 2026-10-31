@@ -210,6 +210,10 @@ public class IotService {
         return resultado;
     }
 
+    public long alertasPendientes() {
+        return alertaRepository.countByAtendidaFalse();
+    }
+
     // alertas registradas hoy (para el reporte de cierre diario)
     public List<Map<String, Object>> alertasDelDia() {
         LocalDateTime inicioDelDia = ahora().toLocalDate().atStartOfDay();

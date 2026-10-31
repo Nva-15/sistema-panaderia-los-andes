@@ -1,53 +1,186 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>.:: Principal ::.</title>
-    <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css}" rel="stylesheet"
-        integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js}"
-        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
-        crossorigin="anonymous"></script>
-    <link rel="stylesheet" th:href="@{/css/header.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script>
-        const username = '[[${session.usuarioActual.username}]]' || null;
-        const rol = '[[${session.usuarioActual.rol}]]' || null;
-
-        const objeto ={
-            usuario: username || '',
-            rol: rol || ''
-        }
-        localStorage.setItem("usuario", JSON.stringify(objeto))
-
+    <title>Inicio · Panadería Los Andes</title>
+    <th:block th:replace="~{componentes/head :: recursos}"></th:block>
+    <style>
+        .grafico { display: flex; align-items: flex-end; gap: 14px; height: 210px; padding: 8px 4px 0; }
+        .grafico .barra { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+        .grafico .barra span.monto { font-size: .72rem; font-weight: 700; margin-bottom: 4px; white-space: nowrap; }
+        .grafico .barra div { width: 100%; max-width: 48px; border-radius: 8px 8px 4px 4px; background: var(--cafe); min-height: 3px; }
+        .grafico .barra.hoy div { background: var(--trigo); }
+        .grafico .barra small { margin-top: 6px; color: var(--texto-suave); font-size: .75rem; }
+    </style>
+    <script th:inline="javascript">
+        // compatibilidad: algunas pantallas antiguas leen el usuario guardado en el navegador
+        try {
+            localStorage.setItem("usuario", JSON.stringify({
+                usuario: /*[[${session.usuarioActual?.username}]]*/ '',
+                rol: /*[[${session.usuarioActual?.rol}]]*/ ''
+            }));
+        } catch (e) { }
     </script>
 </head>
 
 <body>
     <div th:replace="~{componentes/header :: miCabecera}"></div>
 
-    <div class="container py-5">
-
-        <div class="p-5 bg-light rounded shadow text-center mb-5" th:if="${session.usuarioActual != null}">
-            <h2>Bienvenido, Panadería Pastelería Los Andes.</h2>
-            <p>Bienvenido <span class="dato" th:text="${session.usuarioActual.nombre}" th:data-nombre="${session.usuarioActual.nombre}"></span>, tu rol es <span class="rolUsuario" th:text="${session.usuarioActual.rol}"></span></p>
-
+    <main class="contenido">
+        <div class="encabezado">
+            <div>
+                <h1>¡Hola, <span th:text="${session.usuarioActual?.nombre ?: 'bienvenido'}">Neiser</span>! 🥐</h1>
+                <p><span th:text="${panel.fecha}">Viernes 31 de octubre</span> · así va la panadería hoy</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-contorno" th:href="@{/principal/asistente}"><i class="fas fa-robot me-2"></i>Preguntar al asistente</a>
+                <a class="btn btn-marca" th:href="@{/principal/venta}"><i class="fas fa-cash-register me-2"></i>Nueva venta</a>
+            </div>
         </div>
-        <div class="p-5 bg-light rounded shadow text-center mb-5" th:unless="${session.usuarioActual != null}">
-            <h2 >Bienvenido, Panadería Pastelería Los Andes.</h2>
-            <p>Por favor, inicia sesión para acceder a todas las funciones.</p>
-    </div>
-    </div>
 
-    <script th:src="@{https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js}"
-        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-        crossorigin="anonymous"></script>
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.min.js}"
-        integrity="sha384-RuyvpeZCxMJCqVUGFI0Do1mQrods/hhxYlcVfGPOfQtPJh0JCw12tUAZ/Mv10S7D"
-        crossorigin="anonymous"></script>
-    
+        <!-- indicadores -->
+        <div class="row row-cols-1 row-cols-sm-2 g-3 mb-3" th:classappend="${#authorization.expression('hasRole(''ADMIN'')')} ? 'row-cols-xl-4' : 'row-cols-xl-3'">
+            <div class="col" sec:authorize="hasRole('ADMIN')">
+                <div class="tarjeta kpi h-100">
+                    <div class="icono i-trigo"><i class="fas fa-sack-dollar"></i></div>
+                    <div>
+                        <div class="etiqueta">Ventas de hoy</div>
+                        <div class="valor" th:text="${'S/ ' + #numbers.formatDecimal(panel.totalHoy, 1, 'COMMA', 2, 'POINT')}">S/ 0.00</div>
+                        <span class="tendencia" th:if="${panel.variacion != null}"
+                            th:classappend="${panel.variacion >= 0} ? 'text-success' : 'text-danger'">
+                            <i class="fas" th:classappend="${panel.variacion >= 0} ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                            <span th:text="${(panel.variacion >= 0 ? '+' : '') + panel.variacion + '% vs. el ' + panel.diaSemanaPasada + ' pasado'}"></span>
+                        </span>
+                        <span class="tendencia" style="color:var(--texto-suave)" th:if="${panel.variacion == null}">Sin ventas hace una semana para comparar</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tarjeta kpi h-100">
+                    <div class="icono i-cafe"><i class="fas fa-bread-slice"></i></div>
+                    <div>
+                        <div class="etiqueta">Unidades vendidas hoy</div>
+                        <div class="valor" th:text="${panel.unidadesHoy}">0</div>
+                        <span class="tendencia" style="color:var(--texto-suave)" th:text="${panel.ventasRegistradas + ' ventas registradas'}"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tarjeta kpi h-100">
+                    <div class="icono" th:classappend="${panel.cantidadAgotados + panel.cantidadStockBajo > 0} ? 'i-peligro' : 'i-exito'"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="etiqueta">Productos por reponer</div>
+                        <div class="valor" th:text="${panel.cantidadAgotados + panel.cantidadStockBajo}">0</div>
+                        <span class="tendencia" th:classappend="${panel.cantidadAgotados + panel.cantidadStockBajo > 0} ? 'text-danger' : 'text-success'"
+                            th:text="${panel.cantidadAgotados + ' agotados · ' + panel.cantidadStockBajo + ' con stock bajo'}"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="tarjeta kpi h-100">
+                    <div class="icono" th:classappend="${panel.esp32EnLinea} ? 'i-exito' : 'i-cafe'"><i class="fas fa-microchip"></i></div>
+                    <div>
+                        <div class="etiqueta">ESP32 de la tienda</div>
+                        <div class="valor" th:text="${panel.esp32EnLinea} ? 'En línea' : 'Sin conexión'">En línea</div>
+                        <span class="tendencia" style="color:var(--texto-suave)" th:if="${panel.vitrinaTemp != null}"
+                            th:text="${'Vitrina ' + #numbers.formatDecimal(panel.vitrinaTemp, 1, 1) + ' °C · ' + #numbers.formatDecimal(panel.vitrinaHum, 1, 0) + ' %'}"></span>
+                        <span class="tendencia" style="color:var(--texto-suave)" th:if="${panel.vitrinaTemp == null}">Aún no hay lecturas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- grafico de ventas (solo ADMIN) -->
+            <div class="col-12 col-xl-8" sec:authorize="hasRole('ADMIN')">
+                <div class="tarjeta h-100">
+                    <div class="tarjeta-cabecera"><h2>Ventas de los últimos 7 días</h2>
+                        <a class="enlace-marca small" th:href="@{/principal/reporte_venta}">Ver reporte</a></div>
+                    <div class="tarjeta-cuerpo">
+                        <div class="grafico">
+                            <div class="barra" th:each="d : ${panel.grafico}" th:classappend="${d.hoy} ? 'hoy'">
+                                <span class="monto" th:text="${'S/ ' + #numbers.formatDecimal(d.total, 1, 0)}">S/ 0</span>
+                                <div th:style="'height:' + ${d.altura} + '%'"></div>
+                                <small th:text="${d.etiqueta}">Lun</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- por reponer -->
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="tarjeta h-100">
+                    <div class="tarjeta-cabecera"><h2>Por reponer</h2>
+                        <a class="enlace-marca small" sec:authorize="hasRole('ADMIN')" th:href="@{/productos/filtros(filtro='stock_bajo')}">Ver inventario</a>
+                        <a class="enlace-marca small" sec:authorize="!hasRole('ADMIN')" th:href="@{/principal/productos}">Ver productos</a></div>
+                    <table class="tabla">
+                        <tbody>
+                            <tr th:each="p : ${panel.porReponer}">
+                                <td><strong th:text="${p.producto}"></strong><br><span class="leyenda" th:text="${p.categoria}"></span></td>
+                                <td class="text-end">
+                                    <span class="estado e-peligro" th:if="${p.stock <= 0}">Agotado</span>
+                                    <span class="estado e-aviso" th:if="${p.stock > 0}" th:text="${p.stock + ' unid.'}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="vacio" th:if="${#lists.isEmpty(panel.porReponer)}"><i class="fas fa-circle-check"></i>Todo el stock está en orden</div>
+                </div>
+            </div>
+
+            <!-- mas vendidos (solo ADMIN) -->
+            <div class="col-12 col-md-6 col-xl-4" sec:authorize="hasRole('ADMIN')">
+                <div class="tarjeta h-100">
+                    <div class="tarjeta-cabecera"><h2>Más vendidos hoy</h2></div>
+                    <div class="tarjeta-cuerpo">
+                        <div th:each="p, i : ${panel.masVendidos}">
+                            <div class="d-flex justify-content-between mb-1"><span class="fw-bold" th:text="${p.producto}"></span>
+                                <span class="leyenda" th:text="${p.unidades + ' u. · S/ ' + #numbers.formatDecimal(p.monto_soles, 1, 2)}"></span></div>
+                            <div class="barra-stock w-100 mb-3"><span th:style="'width:' + ${p.unidades * 100 / panel.masVendidos[0].unidades} + '%;background:var(--cafe)'"></span></div>
+                        </div>
+                        <div class="vacio" th:if="${#lists.isEmpty(panel.masVendidos)}"><i class="fas fa-basket-shopping"></i>Todavía no hay ventas hoy</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- alertas de la tienda -->
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="tarjeta h-100">
+                    <div class="tarjeta-cabecera"><h2>Alertas de la tienda</h2>
+                        <span class="estado" th:classappend="${#lists.isEmpty(panel.alertas)} ? 'e-exito' : 'e-peligro'"
+                            th:text="${#lists.isEmpty(panel.alertas)} ? 'Sin pendientes' : ${#lists.size(panel.alertas) + ' pendientes'}"></span></div>
+                    <table class="tabla">
+                        <tbody>
+                            <tr th:each="a : ${panel.alertas}">
+                                <td style="width:1%"><span class="estado" th:classappend="${a.prioridad == 'ALTA'} ? 'e-peligro' : 'e-aviso'" th:text="${a.prioridad}"></span></td>
+                                <td><span th:text="${a.mensaje}"></span><br><span class="leyenda" th:text="${a.fecha}"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="vacio" th:if="${#lists.isEmpty(panel.alertas)}"><i class="fas fa-shield-heart"></i>La vitrina, la bandeja y la puerta están en orden</div>
+                    <div class="px-3 pb-3" th:unless="${#lists.isEmpty(panel.alertas)}"><a class="enlace-marca small" th:href="@{/principal/iot}">Ir a Monitoreo IoT</a></div>
+                </div>
+            </div>
+
+            <!-- accesos rapidos -->
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="tarjeta h-100">
+                    <div class="tarjeta-cabecera"><h2>Accesos rápidos</h2></div>
+                    <div class="tarjeta-cuerpo d-grid gap-2">
+                        <a class="btn btn-suave text-start" th:href="@{/principal/venta}"><i class="fas fa-cash-register me-2"></i>Registrar una venta</a>
+                        <a class="btn btn-suave text-start" th:href="@{/principal/asistente}"><i class="fas fa-bread-slice me-2"></i>Plan de producción de mañana</a>
+                        <a class="btn btn-suave text-start" th:href="@{/principal/asistente}"><i class="fas fa-bullhorn me-2"></i>Promoción del día para redes</a>
+                        <a class="btn btn-suave text-start" sec:authorize="hasRole('ADMIN')" th:href="@{/api/reportes/productos/excel}"><i class="fas fa-file-excel me-2"></i>Exportar inventario a Excel</a>
+                        <a class="btn btn-suave text-start" sec:authorize="!hasRole('ADMIN')" th:href="@{/principal/recorrido-vr}"><i class="fas fa-vr-cardboard me-2"></i>Recorrido de capacitación (VR)</a>
+                        <a class="btn btn-suave text-start" th:href="@{/catalogo}" target="_blank"><i class="fas fa-cube me-2"></i>Catálogo 3D para clientes</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </body>
 
 </html>

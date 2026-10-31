@@ -1,0 +1,186 @@
+/* ===== Sistema de diseño · Panadería Los Andes ===== */
+/* Paleta café de la marca + dorado del trigo del logo. Tipografía Nunito (Google Fonts). */
+
+:root {
+    --cafe-oscuro: #5A3921;   /* menu actual */
+    --cafe: #8C6A4D;          /* cabecera actual */
+    --cafe-claro: #B8977A;
+    --trigo: #D9A441;         /* espiga del logo */
+    --trigo-suave: #F6E7C8;
+    --crema: #FAF7F2;
+    --beige: #F1E3D3;
+    --borde: #E8DCCD;
+    --texto: #3B2512;
+    --texto-suave: #7A6656;
+    --exito: #3C8D5A;
+    --exito-suave: #E3F2E8;
+    --aviso: #C98A12;
+    --aviso-suave: #FBF0D9;
+    --peligro: #B5432F;
+    --peligro-suave: #F8E1DC;
+    --info: #3F6E8C;
+    --info-suave: #E1ECF3;
+    --radio: 14px;
+    --sombra: 0 1px 2px rgba(59, 37, 18, .06), 0 4px 14px rgba(59, 37, 18, .07);
+    --bs-body-font-family: "Nunito", system-ui, sans-serif;
+    --bs-body-color: var(--texto);
+}
+
+body { background: var(--crema); color: var(--texto); font-family: "Nunito", system-ui, sans-serif; }
+
+/* ---------- estructura: menu lateral fijo + barra superior ---------- */
+:root { --ancho-lateral: 248px; --alto-barra: 64px; }
+body:has(> .app-marco) { padding-left: var(--ancho-lateral); padding-top: var(--alto-barra); }
+.lateral {
+    position: fixed; top: 0; left: 0; bottom: 0; width: var(--ancho-lateral); z-index: 1030;
+    background: var(--cafe-oscuro); color: #F3E6D8; display: flex; flex-direction: column; padding: 18px 14px; overflow-y: auto;
+    transition: transform .25s ease;
+}
+.lateral .marca { display: flex; align-items: center; gap: 10px; padding: 4px 6px 16px; border-bottom: 1px solid rgba(255,255,255,.12); margin-bottom: 8px; text-decoration: none; }
+.lateral .marca img { width: 62px; background: var(--crema); border-radius: 12px; padding: 4px; }
+.lateral .marca strong { display: block; font-size: 1rem; line-height: 1.1; color: #fff; }
+.lateral .marca small { color: var(--trigo); font-weight: 700; letter-spacing: .04em; font-size: .7rem; }
+.lateral .grupo { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; color: var(--cafe-claro); margin: 14px 10px 6px; font-weight: 700; }
+.lateral a.enlace { display: flex; align-items: center; gap: 11px; color: #F3E6D8; text-decoration: none; padding: 8px 10px; border-radius: 10px; font-weight: 600; font-size: .92rem; }
+.lateral a.enlace i { width: 18px; text-align: center; color: var(--cafe-claro); }
+.lateral a.enlace:hover { background: rgba(255,255,255,.07); }
+.lateral a.enlace.activo { background: var(--trigo); color: var(--cafe-oscuro); }
+.lateral a.enlace.activo i { color: var(--cafe-oscuro); }
+.lateral a .contador { margin-left: auto; background: var(--peligro); color: #fff; border-radius: 10px; font-size: .7rem; padding: 1px 7px; }
+.lateral .pie { margin-top: auto; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+
+.barra-superior {
+    position: fixed; top: 0; left: var(--ancho-lateral); right: 0; height: var(--alto-barra); z-index: 1020;
+    background: #fff; border-bottom: 1px solid var(--borde); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; gap: 12px;
+}
+.miga { font-size: .82rem; color: var(--texto-suave); }
+.miga b { color: var(--texto); }
+.barra-superior .boton-menu { display: none; }
+.usuario { display: flex; align-items: center; gap: 10px; }
+.usuario .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--trigo); color: var(--cafe-oscuro); display: grid; place-items: center; font-weight: 800; text-transform: uppercase; }
+.usuario .rol { font-size: .7rem; background: var(--beige); color: var(--cafe-oscuro); border-radius: 8px; padding: 1px 8px; font-weight: 700; }
+.contenido { padding: 26px 28px 40px; max-width: 1500px; }
+.velo-menu { display: none; }
+
+/* celulares y tablets: el menu lateral se abre con el boton de la barra superior */
+@media (max-width: 991.98px) {
+    body:has(> .app-marco) { padding-left: 0; }
+    .lateral { transform: translateX(-100%); }
+    .menu-abierto .lateral { transform: none; box-shadow: 10px 0 30px rgba(0,0,0,.25); }
+    .menu-abierto .velo-menu { display: block; position: fixed; inset: 0; background: rgba(59,37,18,.4); z-index: 1025; }
+    .barra-superior { left: 0; padding: 0 16px; }
+    .barra-superior .boton-menu { display: inline-grid; }
+    .usuario .datos-usuario { display: none; }
+    .contenido { padding: 18px 16px 32px; }
+}
+
+/* ---------- encabezado de pagina ---------- */
+.encabezado { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.encabezado h1 { font-size: 1.6rem; font-weight: 800; margin: 0; }
+.encabezado p { margin: 2px 0 0; color: var(--texto-suave); }
+
+/* ---------- tarjetas ---------- */
+.tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+.tarjeta-cabecera { padding: 14px 18px; border-bottom: 1px solid var(--borde); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.tarjeta-cabecera h2 { font-size: 1rem; font-weight: 800; margin: 0; }
+.tarjeta-cuerpo { padding: 18px; }
+
+.kpi { padding: 16px 18px; display: flex; gap: 14px; align-items: center; }
+.kpi .icono { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; font-size: 1.25rem; flex-shrink: 0; }
+.kpi .valor { font-size: 1.55rem; font-weight: 800; line-height: 1.1; }
+.kpi .etiqueta { color: var(--texto-suave); font-size: .82rem; font-weight: 600; }
+.kpi .tendencia { font-size: .75rem; font-weight: 700; }
+
+.i-cafe { background: var(--beige); color: var(--cafe-oscuro); }
+.i-trigo { background: var(--trigo-suave); color: #9A6B0C; }
+.i-exito { background: var(--exito-suave); color: var(--exito); }
+.i-peligro { background: var(--peligro-suave); color: var(--peligro); }
+.i-info { background: var(--info-suave); color: var(--info); }
+
+/* ---------- botones ---------- */
+.btn { border-radius: 10px; font-weight: 700; }
+.btn-marca { background: var(--cafe-oscuro); color: #fff; border: 1px solid var(--cafe-oscuro); }
+.btn-marca:hover { background: #47301c; color: #fff; }
+.btn-trigo { background: var(--trigo); color: var(--cafe-oscuro); border: 1px solid var(--trigo); }
+.btn-contorno { background: #fff; color: var(--cafe-oscuro); border: 1px solid var(--cafe-claro); }
+.btn-contorno:hover { background: var(--beige); }
+.btn-suave { background: var(--beige); color: var(--cafe-oscuro); border: 1px solid transparent; }
+.btn-peligro { background: #fff; color: var(--peligro); border: 1px solid #E5B4AA; }
+.btn-icono { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+
+/* ---------- etiquetas de estado ---------- */
+.estado { display: inline-flex; align-items: center; gap: 6px; font-size: .75rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.e-exito { background: var(--exito-suave); color: var(--exito); }
+.e-aviso { background: var(--aviso-suave); color: var(--aviso); }
+.e-peligro { background: var(--peligro-suave); color: var(--peligro); }
+.e-neutro { background: #EEE8E2; color: #6F6259; }
+.e-info { background: var(--info-suave); color: var(--info); }
+.chip { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 8px; background: var(--beige); color: var(--cafe-oscuro); }
+
+/* ---------- formularios y filtros ---------- */
+.form-control, .form-select { border-radius: 10px; border-color: var(--borde); padding: .5rem .8rem; }
+.form-control:focus, .form-select:focus { border-color: var(--trigo); box-shadow: 0 0 0 .2rem rgba(217, 164, 65, .25); }
+.form-label { font-weight: 700; font-size: .85rem; margin-bottom: 4px; }
+.buscador { position: relative; }
+.buscador i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--texto-suave); }
+.buscador input { padding-left: 36px; }
+.segmentos { display: inline-flex; background: var(--beige); border-radius: 10px; padding: 3px; gap: 2px; }
+.segmentos button { border: none; background: none; padding: 5px 12px; border-radius: 8px; font-weight: 700; font-size: .82rem; color: var(--cafe-oscuro); }
+.segmentos button.activo { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.segmentos .n { font-size: .7rem; color: var(--texto-suave); margin-left: 3px; }
+
+/* ---------- tablas ---------- */
+.tabla { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
+.tabla th { background: var(--crema); color: var(--texto-suave); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 800; padding: 10px 16px; border-bottom: 1px solid var(--borde); white-space: nowrap; }
+.tabla td { padding: 12px 16px; border-bottom: 1px solid #F1E9DF; vertical-align: middle; font-size: .92rem; }
+.tabla tr:last-child td { border-bottom: none; }
+.tabla tr:hover td { background: #FFFCF7; }
+.producto-celda { display: flex; align-items: center; gap: 12px; }
+.producto-celda .mini { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--beige); color: var(--cafe); }
+.producto-celda strong { display: block; }
+.barra-stock { height: 6px; background: #EFE6DB; border-radius: 4px; width: 90px; overflow: hidden; }
+.barra-stock span { display: block; height: 100%; border-radius: 4px; }
+.vista-previa { color: var(--texto-suave); font-size: .85rem; max-width: 380px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pie-tabla { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-top: 1px solid var(--borde); font-size: .85rem; color: var(--texto-suave); flex-wrap: wrap; gap: 10px; }
+.paginas { display: flex; gap: 4px; }
+.paginas span { min-width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; border: 1px solid var(--borde); background: #fff; font-weight: 700; color: var(--cafe-oscuro); }
+.paginas span.activo { background: var(--cafe-oscuro); color: #fff; border-color: var(--cafe-oscuro); }
+
+.interruptor { width: 38px; height: 22px; border-radius: 12px; background: var(--exito); position: relative; display: inline-block; vertical-align: middle; }
+.interruptor::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: #fff; top: 3px; right: 3px; }
+.interruptor.off { background: #CDBFB2; }
+.interruptor.off::after { right: auto; left: 3px; }
+
+.mensaje-telegram { background: #EFF4F7; border-radius: 14px; padding: 14px; white-space: pre-wrap; font-size: .9rem; line-height: 1.5; border: 1px solid #DDE7EE; }
+
+.leyenda { font-size: .75rem; color: var(--texto-suave); }
+
+/* ---------- utilidades del sistema ---------- */
+.alerta-marca { border-radius: 12px; border: 1px solid var(--borde); padding: 10px 14px; font-weight: 600; }
+.alerta-marca.exito { background: var(--exito-suave); color: var(--exito); border-color: #C7E3D1; }
+.alerta-marca.error { background: var(--peligro-suave); color: var(--peligro); border-color: #EDC3BA; }
+.tabla-contenedor { overflow-x: auto; }
+.vacio { text-align: center; color: var(--texto-suave); padding: 28px 16px; }
+.vacio i { font-size: 1.8rem; color: var(--cafe-claro); display: block; margin-bottom: 8px; }
+.form-check-input:checked { background-color: var(--exito); border-color: var(--exito); }
+.modal-content { border-radius: var(--radio); border: none; }
+.modal-header { border-bottom-color: var(--borde); }
+.modal-footer { border-top-color: var(--borde); }
+.offcanvas { border-left: none !important; }
+a { color: var(--cafe); }
+.enlace-marca { color: var(--cafe); font-weight: 700; text-decoration: none; }
+.enlace-marca:hover { color: var(--cafe-oscuro); text-decoration: underline; }
+
+/* tarjetas de Bootstrap que arman los scripts (iot.js): mismo aspecto que .tarjeta */
+.contenido .card { border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+.tabla tr.table-danger td { background: var(--peligro-suave); }
+
+/* paginas sin menu lateral: login, inicio publico, errores */
+.pantalla-simple { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background:
+    radial-gradient(circle at 15% 20%, rgba(217,164,65,.18), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(140,106,77,.18), transparent 45%), var(--crema); }
+.pantalla-simple .tarjeta { width: 100%; max-width: 420px; }
+.marca-logo { width: 56px; height: 56px; border-radius: 16px; background: var(--cafe-oscuro); color: var(--trigo);
+    display: grid; place-items: center; font-size: 1.6rem; margin: 0 auto 12px; }
+.tarjeta > .table-responsive:first-child { border-radius: var(--radio) var(--radio) 0 0; }

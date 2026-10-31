@@ -17,6 +17,7 @@ import com.proyecto.panaderialosandes.models.Productos;
 import com.proyecto.panaderialosandes.models.Usuarios;
 import com.proyecto.panaderialosandes.repositorios.CategoriaRepository;
 import com.proyecto.panaderialosandes.services.CategoriaService;
+import com.proyecto.panaderialosandes.services.InicioService;
 import com.proyecto.panaderialosandes.services.ClienteService;
 
 import com.proyecto.panaderialosandes.services.ProductoService;
@@ -42,6 +43,9 @@ public class HomeController {
     @Autowired
     private UsuarioServiceInterface usuarioServiceInterface;
 
+    @Autowired
+    private InicioService inicioService;
+
 
 
     HomeController(CategoriaRepository categoriaRepository) {
@@ -53,12 +57,14 @@ public class HomeController {
     }
 
     @GetMapping("/inicio") // localhost:8081/principal/inicio
-    public String cabecera(@AuthenticationPrincipal Usuarios userAtenticado, HttpSession session) {
+    public String cabecera(@AuthenticationPrincipal Usuarios userAtenticado, HttpSession session, Model model) {
         if( userAtenticado == null) {
             return "redirect:/login";
         }
 
         session.setAttribute("usuarioActual", userAtenticado);
+        // panel de inicio: los montos de dinero solo se calculan para el administrador
+        model.addAttribute("panel", inicioService.panel("ADMIN".equalsIgnoreCase(userAtenticado.getRol())));
         
         return "vista/principal";
     }

@@ -15,5 +15,7 @@ public interface AlertaIoTRepository extends JpaRepository<AlertaIoT, Long> {
 
     List<AlertaIoT> findByFechaHoraAfterOrderByFechaHoraDesc(LocalDateTime desde);
 
+    long countByAtendidaFalse();
+
     boolean existsByTipoAndAtendidaFalseAndFechaHoraAfter(String tipo, LocalDateTime desde);
 }
