@@ -63,7 +63,10 @@ public class VentasController {
     @ResponseBody
     public ResponseEntity<VentasExportDto> enviarDatos() {
         List<Clientes> clientes = clienteService.buscarTodosLosClientes();
-        List<Productos> productos = productoService.obtenerTodosLosProductos();
+        // los productos desactivados en el inventario no se ofrecen en la venta
+        List<Productos> productos = productoService.obtenerTodosLosProductos().stream()
+                .filter(p -> !"inactivo".equalsIgnoreCase(p.getEstado()))
+                .toList();
         VentasExportDto data = new VentasExportDto(clientes, productos);
 
         return ResponseEntity.ok(data);

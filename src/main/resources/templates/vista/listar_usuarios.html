@@ -113,12 +113,18 @@
                             <input type="text" class="form-control" id="usernameEditar" name="username"
                                 placeholder="Nombre de usuario" autocomplete="off" required>
                         </div>
-                        <div class="mb-1">
+                        <div class="mb-3">
                             <label class="form-label" for="rolEditar">Rol</label>
                             <select class="form-select" id="rolEditar" name="rol">
                                 <option value="admin">Admin</option>
                                 <option value="vendedor">Vendedor</option>
                             </select>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label" for="passwordEditar">Nueva contraseña <span class="leyenda">(opcional)</span></label>
+                            <input type="password" class="form-control" id="passwordEditar" autocomplete="new-password"
+                                placeholder="Déjala vacía para no cambiarla">
+                            <div class="leyenda mt-1">Mínimo 5 caracteres, con mayúscula, minúscula, número y carácter especial.</div>
                         </div>
                     </form>
                     <p th:if="${error}" th:text="${error}" class="alerta-marca error mb-0 mt-3"></p>

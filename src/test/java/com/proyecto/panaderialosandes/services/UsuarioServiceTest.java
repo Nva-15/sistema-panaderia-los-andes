@@ -67,4 +67,16 @@ class UsuarioServiceTest {
         assertThrows(IllegalArgumentException.class, () -> usuarioService.guardarUsuario(usuario));
         verify(usuarioRepository, never()).save(usuario);
     }
+
+    @Test
+    void cambiarPasswordEncriptaLaNuevaYRechazaLasDebiles() {
+        Usuarios usuario = crearUsuario("vende", passwordEncoder.encode("Clave123!"));
+
+        usuarioService.cambiarPassword(usuario, "Nueva9#");
+        assertTrue(passwordEncoder.matches("Nueva9#", usuario.getPassword()));
+
+        assertThrows(IllegalArgumentException.class, () -> usuarioService.cambiarPassword(usuario, "sinmayus1!"));
+        assertThrows(IllegalArgumentException.class, () -> usuarioService.cambiarPassword(usuario, "Ab1!"));
+        assertTrue(passwordEncoder.matches("Nueva9#", usuario.getPassword()));
+    }
 }

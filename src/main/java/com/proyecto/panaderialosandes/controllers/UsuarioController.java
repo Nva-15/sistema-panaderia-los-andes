@@ -127,7 +127,7 @@ public class UsuarioController {
     @ResponseBody
     public ResponseEntity<String> actualizarUsuario(
             @PathVariable int id, 
-            @RequestBody UsuarioDto usuarioDto) {
+            @RequestBody ActualizacionUsuario usuarioDto) {
         try {
             Optional<Usuarios> usuarioOptional = usuarioService.buscarPorId(id);
             if (usuarioOptional.isPresent()) {
@@ -141,6 +141,10 @@ public class UsuarioController {
                 }
                 
                 usuario.setRol(rol);
+                // la contraseña solo cambia si el administrador escribio una nueva
+                if (usuarioDto.getNuevaPassword() != null && !usuarioDto.getNuevaPassword().isBlank()) {
+                    usuarioService.cambiarPassword(usuario, usuarioDto.getNuevaPassword());
+                }
                 usuarioService.actualizarUsuario(usuario);
                 return ResponseEntity.ok("Usuario actualizado");
             }
@@ -182,4 +186,13 @@ public class UsuarioController {
     }
     
         
+
+    // datos que envia el modal de edicion (actualizar_usuario.js)
+    @lombok.Data
+    public static class ActualizacionUsuario {
+        private String nombre;
+        private String username;
+        private String rol;
+        private String nuevaPassword;
+    }
 }

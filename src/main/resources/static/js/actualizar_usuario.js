@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const nombreUsuario = document.getElementById("nombreEditar");
     const usernameUsuario = document.getElementById("usernameEditar");
     const rolUsuario = document.getElementById("rolEditar");
+    const nuevaPassword = document.getElementById("passwordEditar");
     const botonesEditar = document.querySelectorAll('[id^="btnEditar-"]')
     const btnGuardar = document.getElementById("btnGuardar");
 
@@ -35,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (usuario) {
             nombreUsuario.value = usuario.nombre || '';
             usernameUsuario.value = usuario.username || '';
-            rolUsuario.value = usuario.rol || '';
+            rolUsuario.value = (usuario.rol || '').toLowerCase();
         }
     }
 
@@ -62,7 +63,8 @@ document.addEventListener('DOMContentLoaded', function () {
             id: idUsuario,
             nombre: nombreUsuario.value,
             username: usernameUsuario.value,
-            rol: rolUsuario.value
+            rol: rolUsuario.value,
+            nuevaPassword: nuevaPassword ? nuevaPassword.value : ''
         };
 
         fetch(`/login/actualizar/${id}`, {
@@ -76,6 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (response.ok) {
                     alert('Cambios guardados correctamente');
                     location.reload(); // Recargar la página
+                } else {
+                    response.text().then(texto => alert(texto.replace(/^Error: /, '') || 'No se pudieron guardar los cambios'));
                 }
             });
     }

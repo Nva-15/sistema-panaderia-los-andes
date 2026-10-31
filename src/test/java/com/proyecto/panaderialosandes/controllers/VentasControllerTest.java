@@ -2,6 +2,7 @@ package com.proyecto.panaderialosandes.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -73,5 +74,27 @@ class VentasControllerTest {
                 .andExpect(jsonPath("$.total", Matchers.is(1.5)));
 
         assertEquals(47, productoRepository.findById(producto.getId()).orElseThrow().getCantidad());
+    }
+
+    @Test
+    void laVentaNoOfreceProductosInactivos() throws Exception {
+        Productos activo = productoRepository.save(nuevoProducto("Pan activo de prueba", "activo"));
+        Productos inactivo = productoRepository.save(nuevoProducto("Pan inactivo de prueba", "inactivo"));
+
+        mockMvc.perform(get("/venta/datosventas").with(user("vende").roles("VENDEDOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productos[?(@.id == " + activo.getId() + ")]").exists())
+                .andExpect(jsonPath("$.productos[?(@.id == " + inactivo.getId() + ")]").doesNotExist());
+    }
+
+    private Productos nuevoProducto(String nombre, String estado) {
+        Productos p = new Productos();
+        p.setNombre(nombre);
+        p.setCategoria_id(categoriaRepository.findAll().get(0));
+        p.setCantidad(20);
+        p.setPrecio(1.0);
+        p.setUnidad("unidad");
+        p.setEstado(estado);
+        return p;
     }
 }

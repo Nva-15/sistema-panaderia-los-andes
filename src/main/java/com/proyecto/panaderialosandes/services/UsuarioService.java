@@ -55,6 +55,21 @@ public class UsuarioService implements UsuarioServiceInterface, UserDetailsServi
         usuarioRepository.save(usuario);
     }
 
+    // restablece la contraseña (boton editar de la lista de usuarios). Mismos requisitos que al crear un usuario
+    public void cambiarPassword(Usuarios usuario, String nuevaPassword) {
+        if (!passwordValida(nuevaPassword)) {
+            throw new IllegalArgumentException(
+                    "La contraseña debe tener al menos 5 caracteres, una mayúscula, una minúscula, un número y un carácter especial");
+        }
+        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+    }
+
+    static boolean passwordValida(String password) {
+        return password != null && password.length() >= 5
+                && password.matches(".*[A-Z].*") && password.matches(".*[a-z].*")
+                && password.matches(".*\\d.*") && password.matches(".*[\\W_].*");
+    }
+
     public void cambiarEstadoUsuario(int id, String nuevoEstado) {
         usuarioRepository.findById(id).ifPresent(usuario -> {
             usuario.setEstado(nuevoEstado);
