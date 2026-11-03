@@ -133,7 +133,7 @@ public class HerramientasAsistente {
             double[] acumulado = porProducto.computeIfAbsent(nombreProducto, k -> new double[2]);
             acumulado[0] += cantidad;
             acumulado[1] += subtotal;
-            porDia.merge(dia, subtotal, Double::sum);
+            porDia.put(dia, porDia.getOrDefault(dia, 0.0) + subtotal);
         }
 
         List<Map<String, Object>> productos = new ArrayList<>();

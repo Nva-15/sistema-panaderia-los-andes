@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +30,6 @@ import com.proyecto.panaderialosandes.services.ProductoService;
 import com.proyecto.panaderialosandes.services.VentasServices;
 import com.proyecto.panaderialosandes.services.automatizacion.EventosNegocio;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
@@ -41,23 +38,24 @@ public class VentasController {
 
     private final Logger logger = LoggerFactory.getLogger(VentasController.class);
 
-    @Autowired
-    private ClienteService clienteService;
-
-    @Autowired
-    private ProductoService productoService;
-
-    @Autowired
-    private VentasServices ventasServices;
-
-    @Autowired
-    private DetalleVentaService detalleVentaService;
-
-    @Autowired
-    private ApplicationEventPublisher eventos;
+    private final ClienteService clienteService;
+    private final ProductoService productoService;
+    private final VentasServices ventasServices;
+    private final DetalleVentaService detalleVentaService;
+    private final ApplicationEventPublisher eventos;
 
     // con esta cantidad o menos se considera stock bajo (igual que en el reporte de inventario)
     private static final int STOCK_MINIMO = 10;
+
+    public VentasController(ClienteService clienteService, ProductoService productoService,
+            VentasServices ventasServices, DetalleVentaService detalleVentaService,
+            ApplicationEventPublisher eventos) {
+        this.clienteService = clienteService;
+        this.productoService = productoService;
+        this.ventasServices = ventasServices;
+        this.detalleVentaService = detalleVentaService;
+        this.eventos = eventos;
+    }
 
     @GetMapping("/datosventas")
     @ResponseBody
@@ -91,7 +89,7 @@ public class VentasController {
 
     @PostMapping
     @ResponseBody
-    public ResponseEntity<Ventas> postMethodName(@RequestBody VentasDto ventaDto,  HttpSession session, @AuthenticationPrincipal Usuarios userAtenticado) {
+    public ResponseEntity<Ventas> postMethodName(@RequestBody VentasDto ventaDto, @AuthenticationPrincipal Usuarios userAtenticado) {
 
         if(userAtenticado==null){
             // Si el usuario está autenticado, podemos continuar

@@ -17,9 +17,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.proyecto.panaderialosandes.dto.AsistenteDto;
 import com.proyecto.panaderialosandes.services.HerramientasAsistente;
 import com.proyecto.panaderialosandes.services.PromptsAsistente;
@@ -92,7 +92,7 @@ public class GroqProveedor implements ProveedorIA {
                 JsonNode llamadas = mensaje.path("tool_calls");
 
                 if (!llamadas.isArray() || llamadas.isEmpty()) {
-                    String texto = mensaje.path("content").asText("").trim();
+                    String texto = mensaje.path("content").asString("").trim();
                     if (texto.isEmpty()) {
                         return AsistenteDto.Respuesta.error("El asistente no genero una respuesta. Intenta reformular la pregunta.");
                     }
@@ -104,19 +104,19 @@ public class GroqProveedor implements ProveedorIA {
                 // se devuelve el pedido del modelo (con sus tool_calls) y luego un mensaje "tool" por cada resultado
                 Map<String, Object> pedido = new LinkedHashMap<>();
                 pedido.put("role", "assistant");
-                pedido.put("content", mensaje.path("content").isTextual() ? mensaje.path("content").asText() : "");
+                pedido.put("content", mensaje.path("content").isString() ? mensaje.path("content").asString() : "");
                 pedido.put("tool_calls", objectMapper.convertValue(llamadas, new TypeReference<List<Object>>() {
                 }));
                 mensajes.add(pedido);
 
                 for (JsonNode llamada : llamadas) {
-                    String nombre = llamada.path("function").path("name").asText();
+                    String nombre = llamada.path("function").path("name").asString();
                     herramientasUsadas.add(nombre);
                     long inicioHerramienta = System.currentTimeMillis();
                     mensajes.add(Map.of(
                             "role", "tool",
-                            "tool_call_id", llamada.path("id").asText(),
-                            "content", ejecutarHerramienta(nombre, llamada.path("function").path("arguments").asText("{}"))));
+                            "tool_call_id", llamada.path("id").asString(),
+                            "content", ejecutarHerramienta(nombre, llamada.path("function").path("arguments").asString("{}"))));
                     logger.info("Asistente: herramienta {} en {} ms", nombre, System.currentTimeMillis() - inicioHerramienta);
                 }
             }
@@ -186,7 +186,7 @@ public class GroqProveedor implements ProveedorIA {
             JsonNode lista = cliente.get().uri("/models").retrieve().body(JsonNode.class);
             List<String> disponibles = new ArrayList<>();
             for (JsonNode m : lista.path("data")) {
-                String id = m.path("id").asText();
+                String id = m.path("id").asString();
                 boolean esDeTexto = !id.contains("whisper") && !id.contains("guard") && !id.contains("tts")
                         && !id.contains("orpheus") && !id.contains("compound") && !id.contains("playai");
                 if (esDeTexto && m.path("active").asBoolean(true)) {
@@ -243,7 +243,7 @@ public class GroqProveedor implements ProveedorIA {
     private String mensajeError(String cuerpo) {
         try {
             JsonNode error = objectMapper.readTree(cuerpo).path("error");
-            return error.path("message").asText(cuerpo);
+            return error.path("message").asString(cuerpo);
         } catch (Exception e) {
             return cuerpo;
         }

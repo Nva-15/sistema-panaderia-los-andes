@@ -24,10 +24,10 @@ _[Validar frecuencias y tiempos con el dueño de la panadería.]_
 
 | Proceso | Automatización | Disparador | Herramientas |
 |---|---|---|---|
-| P1 | **Reporte de cierre diario** | Programado 9:00 p. m. | GitHub Actions → Sistema → Make → Telegram / Google Sheets |
-| P2 | **Agente IA: plan de producción** | Programado 7:00 p. m. | GitHub Actions → Sistema → Agente IA (Groq) → Make → Telegram |
-| P3 | **Aviso de stock bajo** | Una venta deja ≤ 10 unidades | Sistema → Make → Telegram |
-| P4 | **Alertas IoT** | El ESP32 publica una alerta por MQTT | ESP32 → MQTT → Sistema → Make → Telegram |
+| P1 | **Reporte de cierre diario** | Programado 9:00 p. m. | GitHub Actions → Sistema → Make → WhatsApp (Green API) y Gmail |
+| P2 | **Agente IA: plan de producción** | Programado 7:00 p. m. | GitHub Actions → Sistema → Agente IA (Groq) → Make → WhatsApp (Green API) y Gmail |
+| P3 | **Aviso de stock bajo** | Una venta deja ≤ 10 unidades | Sistema → Make → WhatsApp (Green API) y Gmail |
+| P4 | **Alertas IoT** | El ESP32 publica una alerta por MQTT | ESP32 → MQTT → Sistema → Make → WhatsApp (Green API) y Gmail |
 | P5 | **Pedido a proveedor (RPA)** | Semanal | Power Automate Desktop (diseño propuesto, sección 5) |
 
 ### 2.1 Arquitectura de la automatización
@@ -49,8 +49,8 @@ flowchart LR
 
     subgraph Make["Make (No-Code)"]
         WH[Custom webhook] --> R{Router}
-        R --> TG[Telegram Bot]
-        R -- evento = cierre_diario --> GS[Google Sheets]
+        R --> WA[HTTP → Green API<br/>WhatsApp]
+        R --> GM[Gmail]
     end
 
     GA -- "POST /api/automatizaciones/... (X-API-KEY)" --> AS
@@ -77,7 +77,7 @@ flowchart TD
     F --> G[Consultar alertas IoT del día]
     G --> H[Armar mensaje con totales y top 5]
     H --> I[Enviar al webhook de Make]
-    I --> J[Make: Telegram + fila en Google Sheets]
+    I --> J[Make: WhatsApp por Green API + correo Gmail]
     I --> K[(Registrar ejecución)]
 ```
 
@@ -90,14 +90,14 @@ flowchart TD
     C -- No --> Z([Fin: no se repite el aviso])
     C -- Sí --> D[Publicar evento StockBajo]
     D --> E[En segundo plano: enviar a Make]
-    E --> F[Telegram: 'Stock bajo: Pan francés – quedan 9']
+    E --> F[WhatsApp y Gmail: aviso de stock bajo]
 ```
 
 El aviso se envía **una sola vez** cuando el producto cruza el mínimo, no en cada venta posterior, y en segundo plano para no demorar la venta.
 
 ### 3.3 Alertas IoT (tiempo real)
 
-El ESP32 publica la alerta por MQTT → el sistema la guarda (sin duplicar la misma alerta pendiente durante 10 minutos) → publica el evento `AlertaIoTRegistrada` → se reenvía a Telegram.
+El ESP32 publica la alerta por MQTT → el sistema la guarda (sin duplicar la misma alerta pendiente durante 10 minutos) → publica el evento `AlertaIoTRegistrada` → se reenvía por WhatsApp mediante Green API y por Gmail.
 
 ## 4. Agente inteligente: plan de producción
 
@@ -109,7 +109,7 @@ sequenceDiagram
     participant S as Sistema
     participant LLM as Modelo de IA (Groq)
     participant DB as MySQL
-    participant M as Make → Telegram
+    participant M as Make → Green API / WhatsApp y Gmail
 
     GA->>S: ejecutar plan_produccion
     S->>LLM: "Prepara el plan de producción para mañana" + herramientas + ejemplos few-shot
@@ -128,7 +128,7 @@ sequenceDiagram
 | Autonomía | Elige qué herramientas usar y en qué orden |
 | Percepción del entorno | Lee ventas, inventario y sensores IoT reales |
 | Razonamiento | Calcula demanda promedio, ajuste de fin de semana y resta el stock |
-| Acción | Entrega el plan al equipo por Telegram sin intervención humana |
+| Acción | Entrega el plan al equipo por WhatsApp y Gmail sin intervención humana |
 | Límites de seguridad | Solo lectura: no puede modificar datos |
 
 ## 5. Propuesta RPA: pedido semanal al proveedor (Power Automate Desktop)
@@ -155,20 +155,21 @@ _[Si el equipo lo implementa: grabar el flujo en Power Automate Desktop (gratuit
 | Tiempo en decidir la producción | _[medir]_ min | Plan listo a las 7 p. m. |
 | Tiempo de reacción ante stock bajo | Cuando el cliente pregunta | Inmediato |
 | Tiempo de reacción ante vitrina caliente o puerta abierta | Cuando alguien lo nota | Inmediato |
-| Historial de ventas diarias | No existe | Google Sheets automático |
+| Recepción del reporte diario | Revisión manual | Aviso por WhatsApp y Gmail |
 
 ## 7. Prototipo y evidencias
 
 - Pantalla **Reportes → Automatizaciones** (solo administrador): estado de la configuración, botón *Ejecutar ahora* / *Enviar prueba* y el historial con el texto de cada mensaje.
-- Escenario de Make (webhook → router → Telegram / Google Sheets): ver la [guía paso a paso](guia_make_telegram.md).
+- Escenario de Make (webhook → router → Green API / WhatsApp y Gmail): ver la [guía paso a paso](guia_make_green_api_gmail.md).
 - Flujo programado: [`.github/workflows/automatizaciones.yml`](../../.github/workflows/automatizaciones.yml).
 - 7 pruebas automáticas nuevas (34 en total), con un servidor que simula el webhook de Make.
 
-_[Insertar capturas: escenario de Make, mensajes recibidos en Telegram, hoja de Google Sheets, ejecución en GitHub Actions y pantalla de automatizaciones.]_
+_[Insertar capturas: escenario de Make, mensaje de WhatsApp enviado con Green API, correo recibido en Gmail, ejecución en GitHub Actions y pantalla de automatizaciones.]_
 
 ## 8. Referencias
 
-- Make. *Webhooks* y *Telegram Bot* modules. https://www.make.com/en/help
-- Telegram. *Bots: An introduction for developers*. https://core.telegram.org/bots
+- Make. *Webhooks, HTTP y Gmail*. https://www.make.com/en/help
+- Green API. *Documentación de la API*. https://green-api.com/en/docs/
+- Google. *Conectar Gmail a Make*. https://www.make.com/en/help/app/gmail
 - GitHub. *Events that trigger workflows – schedule*. https://docs.github.com/actions
 - Microsoft. *Power Automate Desktop documentation*. https://learn.microsoft.com/power-automate/desktop-flows/

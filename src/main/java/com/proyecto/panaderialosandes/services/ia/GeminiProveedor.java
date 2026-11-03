@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import com.google.genai.Client;
 import com.google.genai.errors.ApiException;
 import com.google.genai.errors.GenAiIOException;
@@ -104,7 +104,8 @@ public class GeminiProveedor implements ProveedorIA {
                 if (candidato == null || candidato.content().isEmpty()) {
                     return AsistenteDto.Respuesta.error("El asistente no genero una respuesta. Intenta reformular la pregunta.");
                 }
-                FinishReason.Known motivo = candidato.finishReason().map(FinishReason::knownEnum).orElse(null);
+                FinishReason razon = candidato.finishReason().orElse(null);
+                FinishReason.Known motivo = razon == null ? null : razon.knownEnum();
                 if (motivo != null && motivo != FinishReason.Known.STOP && motivo != FinishReason.Known.MAX_TOKENS) {
                     logger.warn("Respuesta de IA terminada por: {}", motivo);
                     return AsistenteDto.Respuesta.error("El asistente no puede responder esa solicitud. Intenta reformularla.");

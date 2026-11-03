@@ -2,10 +2,13 @@ package com.proyecto.panaderialosandes.services.automatizacion;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.NonNull;
+import org.springframework.data.core.TypedPropertyPath;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,6 +26,8 @@ public class HistorialAutomatizaciones {
     public static final List<Integer> TAMANOS = List.of(5, 10, 20, 50);
     public static final List<String> ESTADOS = List.of(EventoAutomatizacion.ENVIADO, EventoAutomatizacion.ERROR,
             EventoAutomatizacion.SIN_WEBHOOK);
+    private static final Sort ORDEN_FECHA_DESC = Sort.by(Sort.Direction.DESC,
+            TypedPropertyPath.path((@NonNull EventoAutomatizacion evento) -> evento.getFechaHora()));
     // horarios de las tareas programadas (.github/workflows/automatizaciones.yml)
     private static final Map<TipoAutomatizacion, LocalTime> HORARIOS = Map.of(
             TipoAutomatizacion.PLAN_PRODUCCION, LocalTime.of(19, 0),
@@ -37,7 +42,8 @@ public class HistorialAutomatizaciones {
     public record Filtros(String tipo, String estado, String periodo, int tamano, int pagina) {
 
         public static Filtros normalizar(String tipo, String estado, String periodo, Integer tamano, Integer pagina) {
-            String t = TipoAutomatizacion.desdeClave(tipo == null ? "" : tipo).map(TipoAutomatizacion::getClave).orElse("");
+            TipoAutomatizacion tipoEncontrado = TipoAutomatizacion.desdeClave(tipo == null ? "" : tipo).orElse(null);
+            String t = tipoEncontrado == null ? "" : tipoEncontrado.getClave();
             String e = estado != null && ESTADOS.contains(estado) ? estado : "";
             String p = periodo != null && List.of("hoy", "7", "30", "todo").contains(periodo) ? periodo : "7";
             int n = tamano != null && TAMANOS.contains(tamano) ? tamano : 5;
@@ -46,14 +52,23 @@ public class HistorialAutomatizaciones {
         }
     }
 
-    public Page<EventoAutomatizacion> buscar(Filtros f) {
-        Specification<EventoAutomatizacion> condicion = porTipo(f.tipo()).and(porPeriodo(f.periodo())).and(porEstado(f.estado()));
-        Page<EventoAutomatizacion> pagina = repositorio.findAll(condicion, PageRequest.of(f.pagina() - 1, f.tamano(), Sort.by(Sort.Direction.DESC, "fechaHora")));
-        // si la pagina pedida ya no existe (por ejemplo al cambiar un filtro) se muestra la ultima
-        if (pagina.getContent().isEmpty() && pagina.getTotalPages() > 0 && f.pagina() > pagina.getTotalPages()) {
-            pagina = repositorio.findAll(condicion, PageRequest.of(pagina.getTotalPages() - 1, f.tamano(), Sort.by(Sort.Direction.DESC, "fechaHora")));
+    public Page<EventoAutomatizacion> buscar(Filtros filtros) {
+        Specification<EventoAutomatizacion> condicion = porTipo(filtros.tipo())
+                .and(porPeriodo(filtros.periodo()))
+                .and(porEstado(filtros.estado()));
+        int numeroSolicitado = filtros.pagina() - 1;
+        PageRequest solicitud = PageRequest.of(numeroSolicitado, filtros.tamano(), ORDEN_FECHA_DESC);
+        Page<EventoAutomatizacion> resultado = repositorio.findAll(condicion, solicitud);
+
+        // Si el filtro deja la pagina solicitada fuera de rango, se muestra la ultima disponible.
+        if (resultado.getContent().isEmpty()
+                && resultado.getTotalPages() > 0
+                && filtros.pagina() > resultado.getTotalPages()) {
+            int ultimaPagina = resultado.getTotalPages() - 1;
+            resultado = repositorio.findAll(condicion,
+                    PageRequest.of(ultimaPagina, filtros.tamano(), ORDEN_FECHA_DESC));
         }
-        return pagina;
+        return resultado;
     }
 
     // cantidad por estado con los mismos filtros de tipo y periodo (para los contadores de las pestanas)
@@ -98,16 +113,16 @@ public class HistorialAutomatizaciones {
 
     private Map<String, Object> proximaEjecucion() {
         LocalDateTime ahora = IotService.ahora();
-        TipoAutomatizacion proxima = null;
-        LocalDateTime cuando = null;
-        for (Map.Entry<TipoAutomatizacion, LocalTime> h : HORARIOS.entrySet()) {
-            LocalDateTime candidata = ahora.toLocalDate().atTime(h.getValue());
-            if (!candidata.isAfter(ahora)) {
-                candidata = candidata.plusDays(1);
-            }
-            if (cuando == null || candidata.isBefore(cuando)) {
+        Iterator<Map.Entry<TipoAutomatizacion, LocalTime>> horarios = HORARIOS.entrySet().iterator();
+        Map.Entry<TipoAutomatizacion, LocalTime> siguiente = horarios.next();
+        LocalDateTime cuando = proximaHora(ahora, siguiente.getValue());
+        TipoAutomatizacion proxima = siguiente.getKey();
+        while (horarios.hasNext()) {
+            Map.Entry<TipoAutomatizacion, LocalTime> horario = horarios.next();
+            LocalDateTime candidata = proximaHora(ahora, horario.getValue());
+            if (candidata.isBefore(cuando)) {
                 cuando = candidata;
-                proxima = h.getKey();
+                proxima = horario.getKey();
             }
         }
         long minutos = java.time.Duration.between(ahora, cuando).toMinutes();
@@ -116,6 +131,11 @@ public class HistorialAutomatizaciones {
         datos.put("proximaHora", String.format("%d:%02d", cuando.getHour(), cuando.getMinute()));
         datos.put("proximaFalta", minutos >= 60 ? "en " + minutos / 60 + " h " + minutos % 60 + " min" : "en " + minutos + " min");
         return datos;
+    }
+
+    private static LocalDateTime proximaHora(LocalDateTime ahora, LocalTime hora) {
+        LocalDateTime candidata = ahora.toLocalDate().atTime(hora);
+        return candidata.isAfter(ahora) ? candidata : candidata.plusDays(1);
     }
 
     private static Specification<EventoAutomatizacion> porTipo(String tipo) {

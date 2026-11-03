@@ -11,7 +11,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 
 | Capa | Tecnología |
 |---|---|
-| Backend | Java 21, Spring Boot 3.5 (Web, Data JPA, Security) |
+| Backend | Java 21, Spring Boot 4.1.2 (Web, Data JPA, Security) |
 | Vistas | Thymeleaf, Bootstrap 5, JavaScript |
 | Base de datos | MySQL 8 |
 | Reportes | iText (PDF), Apache POI (Excel), CSV |

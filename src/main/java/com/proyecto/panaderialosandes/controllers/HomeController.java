@@ -1,6 +1,5 @@
 package com.proyecto.panaderialosandes.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,7 +14,6 @@ import com.proyecto.panaderialosandes.models.Categorias;
 import com.proyecto.panaderialosandes.models.Clientes;
 import com.proyecto.panaderialosandes.models.Productos;
 import com.proyecto.panaderialosandes.models.Usuarios;
-import com.proyecto.panaderialosandes.repositorios.CategoriaRepository;
 import com.proyecto.panaderialosandes.services.CategoriaService;
 import com.proyecto.panaderialosandes.services.InicioService;
 import com.proyecto.panaderialosandes.services.ClienteService;
@@ -30,25 +28,20 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/principal") // localhost:8081/principal
 public class HomeController {
 
-    @Autowired
-    private CategoriaService categoriaService;
+    private final CategoriaService categoriaService;
+    private final ProductoService productoService;
+    private final ClienteService clienteService;
+    private final UsuarioServiceInterface usuarioServiceInterface;
+    private final InicioService inicioService;
 
-    @Autowired
-    private ProductoService productoService;
-
-    @Autowired
-    private ClienteService clienteService;
-    
-
-    @Autowired
-    private UsuarioServiceInterface usuarioServiceInterface;
-
-    @Autowired
-    private InicioService inicioService;
-
-
-
-    HomeController(CategoriaRepository categoriaRepository) {
+    public HomeController(CategoriaService categoriaService, ProductoService productoService,
+            ClienteService clienteService, UsuarioServiceInterface usuarioServiceInterface,
+            InicioService inicioService) {
+        this.categoriaService = categoriaService;
+        this.productoService = productoService;
+        this.clienteService = clienteService;
+        this.usuarioServiceInterface = usuarioServiceInterface;
+        this.inicioService = inicioService;
     }
 
     @GetMapping // localhost:8081/principal

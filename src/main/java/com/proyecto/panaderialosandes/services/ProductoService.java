@@ -3,7 +3,6 @@ import java.util.stream.Collectors;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.proyecto.panaderialosandes.models.Productos;
@@ -11,8 +10,11 @@ import com.proyecto.panaderialosandes.repositorios.ProductoRepository;
 
 @Service
 public class ProductoService implements ProductoServiceInterface {
-    @Autowired
-    private ProductoRepository productoRepository;
+    private final ProductoRepository productoRepository;
+
+    public ProductoService(ProductoRepository productoRepository) {
+        this.productoRepository = productoRepository;
+    }
 
     public List<Productos> obtenerTodosLosProductos() {
         return productoRepository.findAll();

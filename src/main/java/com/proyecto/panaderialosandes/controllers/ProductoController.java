@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -38,16 +37,19 @@ import com.itextpdf.text.pdf.*;
 @RequestMapping("/productos")
 public class ProductoController {
 
-    @Autowired
-    private ProductoService productoService;
+    private final ProductoService productoService;
 
     private static final Logger logger = LoggerFactory.getLogger(ProductoController.class);
 
-    @Autowired
-    private CategoriaRepository categoriaRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final ProductoRepository productoRepository;
 
-    @Autowired
-    private ProductoRepository productoRepository;
+    public ProductoController(ProductoService productoService, CategoriaRepository categoriaRepository,
+            ProductoRepository productoRepository) {
+        this.productoService = productoService;
+        this.categoriaRepository = categoriaRepository;
+        this.productoRepository = productoRepository;
+    }
 
     @GetMapping("/nuevo") // localhost:8081/productos/nuevo
     public String agregarProducto(Model model) {

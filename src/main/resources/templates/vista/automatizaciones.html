@@ -16,7 +16,7 @@
         <div class="encabezado">
             <div>
                 <h1>Automatizaciones</h1>
-                <p>Procesos que se ejecutan solos y avisan por Telegram, correo o Google Sheets (vía Make)</p>
+                <p>Procesos que se ejecutan solos y avisan por WhatsApp y correo (vía Make)</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <span class="estado" th:classappend="${webhookConfigurado} ? 'e-exito' : 'e-peligro'"
@@ -152,7 +152,7 @@
         </div>
     </main>
 
-    <!-- detalle de una ejecucion: muestra el mensaje completo tal como llego a Telegram -->
+    <!-- detalle de una ejecucion: muestra el mensaje completo tal como llego a WhatsApp -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="detalleEjecucion" style="width:460px;max-width:100%">
         <div class="tarjeta-cabecera">
             <div><div class="leyenda">Detalle de la ejecución</div><h2 class="fs-5" id="detalleNombre"></h2></div>
@@ -166,7 +166,7 @@
                 <div class="col-12"><div class="leyenda">Resultado</div><span id="detalleResultado"></span></div>
             </div>
             <div class="leyenda mb-1">Mensaje</div>
-            <div class="mensaje-telegram" id="detalleMensaje"></div>
+            <div class="mensaje-whatsapp" id="detalleMensaje"></div>
             <button type="button" class="btn btn-contorno w-100 mt-3" id="botonCopiar"><i class="far fa-copy me-2"></i>Copiar mensaje</button>
         </div>
     </div>

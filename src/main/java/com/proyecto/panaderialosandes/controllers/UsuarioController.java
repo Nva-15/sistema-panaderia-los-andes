@@ -2,7 +2,6 @@ package com.proyecto.panaderialosandes.controllers;
 
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -24,12 +23,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequestMapping("/login")
 public class UsuarioController {
     
-    @Autowired
-    private UsuarioService usuarioService;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UsuarioService usuarioService;
+    private final PasswordEncoder passwordEncoder;
 
+    public UsuarioController(UsuarioService usuarioService, PasswordEncoder passwordEncoder) {
+        this.usuarioService = usuarioService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping
     public String mostrarLogin() {

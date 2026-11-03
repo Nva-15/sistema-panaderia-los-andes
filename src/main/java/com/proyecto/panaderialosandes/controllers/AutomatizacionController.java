@@ -2,6 +2,7 @@ package com.proyecto.panaderialosandes.controllers;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -48,15 +49,23 @@ public class AutomatizacionController {
             @RequestParam(required = false) Integer pagina) {
         HistorialAutomatizaciones.Filtros filtros = HistorialAutomatizaciones.Filtros.normalizar(tipo, estado, periodo, tamano, pagina);
         Page<EventoAutomatizacion> eventos = historial.buscar(filtros);
-        model.addAttribute("tipos", TipoAutomatizacion.values());
-        model.addAttribute("horarios", java.util.Arrays.stream(TipoAutomatizacion.values())
-                .filter(t -> historial.horario(t) != null)
-                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, historial::horario)));
+        TipoAutomatizacion[] tipos = TipoAutomatizacion.values();
+        Map<String, String> horarios = new LinkedHashMap<>();
+        Map<String, String> nombresTipos = new LinkedHashMap<>();
+        Map<String, String> iconosTipos = new LinkedHashMap<>();
+        for (TipoAutomatizacion tipoAutomatizacion : tipos) {
+            String horario = historial.horario(tipoAutomatizacion);
+            if (horario != null) {
+                horarios.put(tipoAutomatizacion.getClave(), horario);
+            }
+            nombresTipos.put(tipoAutomatizacion.getClave(), tipoAutomatizacion.getNombre());
+            iconosTipos.put(tipoAutomatizacion.getClave(), tipoAutomatizacion.getIcono());
+        }
+        model.addAttribute("tipos", tipos);
+        model.addAttribute("horarios", horarios);
         model.addAttribute("ultimas", historial.ultimas());
-        model.addAttribute("nombresTipos", java.util.Arrays.stream(TipoAutomatizacion.values())
-                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, TipoAutomatizacion::getNombre)));
-        model.addAttribute("iconosTipos", java.util.Arrays.stream(TipoAutomatizacion.values())
-                .collect(java.util.stream.Collectors.toMap(TipoAutomatizacion::getClave, TipoAutomatizacion::getIcono)));
+        model.addAttribute("nombresTipos", nombresTipos);
+        model.addAttribute("iconosTipos", iconosTipos);
         model.addAttribute("indicadores", historial.indicadores());
         model.addAttribute("eventos", eventos);
         model.addAttribute("filtros", filtros);
@@ -95,7 +104,10 @@ public class AutomatizacionController {
                 apiKey.getBytes(StandardCharsets.UTF_8), claveRecibida.trim().getBytes(StandardCharsets.UTF_8))) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("ok", false, "error", "API key invalida"));
         }
-        TipoAutomatizacion tipo = TipoAutomatizacion.desdeClave(clave).filter(TipoAutomatizacion::isProgramada).orElse(null);
+        TipoAutomatizacion tipo = TipoAutomatizacion.desdeClave(clave).orElse(null);
+        if (tipo != null && !tipo.isProgramada()) {
+            tipo = null;
+        }
         if (tipo == null) {
             return ResponseEntity.badRequest().body(Map.of("ok", false, "error", "Automatizacion programada desconocida: " + clave));
         }
