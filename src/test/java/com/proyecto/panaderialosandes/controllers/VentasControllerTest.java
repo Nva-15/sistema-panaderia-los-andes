@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 import com.proyecto.panaderialosandes.models.Clientes;
 import com.proyecto.panaderialosandes.models.Productos;
@@ -28,6 +30,7 @@ import com.proyecto.panaderialosandes.repositorios.DetalleVentaRepository;
 import com.proyecto.panaderialosandes.repositorios.ProductoRepository;
 import com.proyecto.panaderialosandes.repositorios.UsuarioRepository;
 import com.proyecto.panaderialosandes.repositorios.VentaRepository;
+import com.proyecto.panaderialosandes.services.IotService;
 
 // prueba de integracion: registrar una venta descuenta el stock del producto
 @SpringBootTest
@@ -54,6 +57,13 @@ class VentasControllerTest {
 
     @Autowired
     private DetalleVentaRepository detalleVentaRepository;
+
+    @BeforeEach
+    void limpiarVentasDePrueba() {
+        detalleVentaRepository.deleteAll();
+        ventaRepository.deleteAll();
+        clienteRepository.deleteAll();
+    }
 
     @Test
     void vistaDeVentaIncluyeModalDeConfirmacion() throws Exception {
@@ -104,9 +114,15 @@ class VentasControllerTest {
         assertEquals(3, detalle.getCantidad());
         assertEquals(1.5, detalle.getSubtotal());
 
+        var ventaRegistrada = detalle.getVenta_id();
+        ventaRegistrada.setFecha(Date.from(LocalDate.now(IotService.ZONA).atTime(12, 0)
+                .atZone(IotService.ZONA).toInstant()));
+        ventaRepository.save(ventaRegistrada);
+        String hoyEnPeru = LocalDate.now(IotService.ZONA).toString();
+
         mockMvc.perform(get("/api/reporte-ventas/ventas")
-                .param("fechaDesde", LocalDate.now().toString())
-                .param("fechaHasta", LocalDate.now().toString())
+                .param("fechaDesde", hoyEnPeru)
+                .param("fechaHasta", hoyEnPeru)
                 .with(user(vendedor)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0][3]", Matchers.is("Cliente Prueba")))
