@@ -9,6 +9,7 @@ body {
     padding: 10px 16px;
     background-color: #5c3a1e;
     color: #fff;
+    flex-wrap: wrap;
 }
 
 .cabecera-catalogo small {
@@ -20,6 +21,29 @@ body {
     background-color: #fff;
     border-radius: 8px;
     padding: 2px 6px;
+}
+
+.btn-ingreso-catalogo {
+    border: 1px solid #f1e3d3;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.btn-ingreso-catalogo:hover,
+.btn-ingreso-catalogo:focus-visible {
+    background-color: #f1e3d3;
+    color: #5c3a1e;
+}
+
+.tarjeta-qr {
+    position: sticky;
+    top: 16px;
+}
+
+.tarjeta-qr img {
+    width: 100%;
+    max-width: 240px;
 }
 
 .visor model-viewer {

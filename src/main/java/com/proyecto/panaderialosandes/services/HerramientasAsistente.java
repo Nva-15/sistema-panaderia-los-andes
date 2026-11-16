@@ -110,7 +110,7 @@ public class HerramientasAsistente {
         validarFecha(fechaDesde);
         validarFecha(fechaHasta);
 
-        // columnas: fecha, usuario, producto, categoria, cantidad, precio, subtotal
+        // columnas: venta, fecha, vendedor, cliente, DNI, producto, categoria, cantidad, precio, subtotal
         List<Object[]> filas = reporteVentaService.obtenerDatosVentas(fechaDesde, fechaHasta, null, null, null);
 
         double total = 0;
@@ -119,14 +119,14 @@ public class HerramientasAsistente {
         Map<String, Double> porDia = new TreeMap<>();
 
         for (Object[] fila : filas) {
-            String nombreProducto = String.valueOf(fila[2]);
+            String nombreProducto = String.valueOf(fila[5]);
             if (producto != null && !producto.isBlank()
                     && !nombreProducto.toLowerCase().contains(producto.toLowerCase())) {
                 continue;
             }
-            long cantidad = ((Number) fila[4]).longValue();
-            double subtotal = ((Number) fila[6]).doubleValue();
-            String dia = String.valueOf(fila[0]).substring(0, 10);
+            long cantidad = ((Number) fila[7]).longValue();
+            double subtotal = ((Number) fila[9]).doubleValue();
+            String dia = String.valueOf(fila[1]).substring(0, 10);
 
             total += subtotal;
             unidades += cantidad;

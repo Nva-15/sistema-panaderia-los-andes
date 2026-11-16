@@ -89,10 +89,12 @@
                             </td>
                             <td class="leyenda" th:text="${#temporals.format(fechaActualizacion, 'dd/MM/yyyy')}"></td>
                             <td class="text-center">
-                                <a type="button" data-bs-toggle="modal" data-bs-target="#exampleModal"
-                                    class="btn btn-icono botonEditar" th:data-id="${producto.id}" title="Editar">
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#modalEditarProducto"
+                                    class="btn btn-icono botonEditar"
+                                    th:attr="data-id=${producto.id},data-nombre=${producto.nombre},data-cantidad=${producto.cantidad},data-precio=${producto.precio},data-unidad=${producto.unidad},data-categoria-id=${producto.categoria_id?.id}"
+                                    title="Editar" aria-label="Editar producto">
                                     <i class="fas fa-pen"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(productos)}" class="text-center">
@@ -108,36 +110,7 @@
         </div>
     </main>
 
-    <!-- modal para editar el producto (actualizar_producto.js) -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="exampleModalLabel">Actualizar producto</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <div class="mb-3">
-                            <label class="form-label" for="nombreEditar">Nombre del producto</label>
-                            <input type="text" class="form-control" id="nombreEditar"
-                                name="nombre" placeholder="Nombre completo del producto" autocomplete="off" required>
-                        </div>
-                        <div class="mb-1">
-                            <label class="form-label" for="stockEditar">Stock</label>
-                            <input type="number" class="form-control" id="stockEditar"
-                                name="cantidad" placeholder="Stock actual" autocomplete="off" required>
-                        </div>
-                    </form>
-                    <p th:if="${error}" th:text="${error}" class="alerta-marca error mb-0 mt-3"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-contorno" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="btnGuardar" type="button" class="btn btn-marca">Guardar cambios</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div th:replace="~{componentes/modal_producto :: editorProducto}"></div>
 
     <script>
         function cambiarEstado(checkbox) {

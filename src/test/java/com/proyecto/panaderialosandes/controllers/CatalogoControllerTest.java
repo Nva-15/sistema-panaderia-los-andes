@@ -53,9 +53,47 @@ class CatalogoControllerTest {
     }
 
     @Test
+    void laRutaRaizAbreElCatalogoYElBotonLlevaAlLoginExistente() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("model-viewer")))
+                .andExpect(content().string(Matchers.containsString("/catalogo/qr.png")))
+                .andExpect(content().string(Matchers.containsString("Iniciar sesión")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("id=\"asistenteFlotante\""))));
+
+        mockMvc.perform(get("/").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("Iniciar sesión")))
+                .andExpect(content().string(Matchers.containsString("/catalogo/qr.png")))
+                .andExpect(content().string(Matchers.containsString("id=\"asistenteFlotante\"")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("Ir al sistema"))));
+
+        mockMvc.perform(get("/principal"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl("/catalogo"));
+
+        mockMvc.perform(get("/catalogo"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("href=\"/login\"")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("modalLogin"))));
+
+        mockMvc.perform(get("/catalogo").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("Ir al sistema")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("Iniciar sesión"))))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("/catalogo/qr.png"))));
+
+        mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("Bienvenido de nuevo")));
+    }
+
+    @Test
     void elCatalogoEsPublicoYMuestraDisponibilidadSinRevelarElStock() throws Exception {
         crear("Torta Selva Negra AR", "Tortas", 3, "activo");
         crear("Torta de fresa AR", "Tortas", 0, "activo");
+        crear("Pan Chapla AR", "Panes", 12, "activo");
+        crear("Pan francés AR", "Panes", 12, "activo");
         crear("Producto oculto AR", "Pasteles", 50, "inactivo");
 
         mockMvc.perform(get("/catalogo")).andExpect(status().isOk())
@@ -67,6 +105,8 @@ class CatalogoControllerTest {
                 .andExpect(jsonPath("$[?(@.nombre=='Torta Selva Negra AR')].modelo").value("/modelos/torta_chocolate.glb"))
                 .andExpect(jsonPath("$[?(@.nombre=='Torta de fresa AR')].disponibilidad").value("agotado"))
                 .andExpect(jsonPath("$[?(@.nombre=='Torta de fresa AR')].modelo").value("/modelos/torta_fresa.glb"))
+                .andExpect(jsonPath("$[?(@.nombre=='Pan Chapla AR')].modelo").value("/modelos/pan_chapla.glb"))
+                .andExpect(jsonPath("$[?(@.nombre=='Pan francés AR')].modelo").value("/modelos/pan_frances.glb"))
                 .andExpect(jsonPath("$[?(@.nombre=='Producto oculto AR')]").isEmpty())
                 // la cantidad exacta en stock no se publica
                 .andExpect(jsonPath("$[0].cantidad").doesNotExist());
@@ -74,7 +114,8 @@ class CatalogoControllerTest {
 
     @Test
     void losModelos3dSonPublicos() throws Exception {
-        for (String modelo : new String[] { "torta_chocolate", "torta_fresa", "torta_tres_leches", "pan_frances", "pastel" }) {
+        for (String modelo : new String[] { "torta_chocolate", "torta_fresa", "torta_tres_leches", "pan_frances",
+                "pan_chapla", "pastel" }) {
             mockMvc.perform(get("/modelos/" + modelo + ".glb")).andExpect(status().isOk());
         }
     }

@@ -68,4 +68,10 @@ class SeguridadTest {
                 .andExpect(redirectedUrl("/principal/inicio"))
                 .andExpect(cookie().doesNotExist("remember-me"));
     }
+
+    @Test
+    void loginIncorrectoRegresaALaPaginaLogin() throws Exception {
+        mockMvc.perform(post("/login").param("username", "invalido").param("password", "incorrecta"))
+                .andExpect(redirectedUrl("/login?error"));
+    }
 }

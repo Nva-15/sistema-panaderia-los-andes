@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
     <link rel="stylesheet" th:href="@{/css/catalogo.css}">
+    <link rel="stylesheet" th:href="@{/css/asistente-flotante.css}">
 </head>
 
 <body>
@@ -20,47 +21,71 @@
             <h1 class="h5 mb-0">Panadería Pastelería Los Andes</h1>
             <small>Catálogo 3D · míralo en tu mesa con Realidad Aumentada</small>
         </div>
+        <a class="btn btn-ingreso-catalogo ms-auto" th:href="@{/login}" th:if="${paginaInicio}">
+            <i class="fas fa-right-to-bracket me-2"></i>Iniciar sesión
+        </a>
+        <a class="btn btn-ingreso-catalogo ms-auto" th:href="@{/login}" sec:authorize="isAnonymous()" th:unless="${paginaInicio}">
+            <i class="fas fa-right-to-bracket me-2"></i>Iniciar sesión
+        </a>
+        <a class="btn btn-ingreso-catalogo ms-auto" th:href="@{/principal/inicio}" sec:authorize="isAuthenticated()" th:unless="${paginaInicio}">
+            <i class="fas fa-cash-register me-2"></i>Ir al sistema
+        </a>
     </header>
 
     <main class="container py-3">
-        <!-- visor del producto elegido -->
-        <section class="visor card shadow-sm mb-3">
-            <model-viewer id="visor" alt="Producto de la panadería en 3D" camera-controls touch-action="pan-y"
-                auto-rotate rotation-per-second="20deg" shadow-intensity="1" exposure="1.05"
-                camera-orbit="30deg 65deg auto" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed"
-                ar-placement="floor" environment-image="neutral">
-                <button slot="ar-button" id="botonAr" class="btn btn-ar">
-                    <i class="fas fa-cube me-2"></i>Ver en tu mesa
-                </button>
-                <div slot="progress-bar"></div>
-            </model-viewer>
-            <div class="card-body pt-2">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                        <h2 id="nombreProducto" class="h4 mb-0">Cargando…</h2>
-                        <small id="categoriaProducto" class="text-muted"></small>
+        <div class="row g-3">
+            <div class="col-lg-9">
+                <!-- visor del producto elegido -->
+                <section class="visor card shadow-sm mb-3">
+                    <model-viewer id="visor" alt="Producto de la panadería en 3D" camera-controls touch-action="pan-y"
+                        auto-rotate rotation-per-second="20deg" shadow-intensity="1" exposure="1.05"
+                        camera-orbit="30deg 65deg auto" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed"
+                        ar-placement="floor" environment-image="neutral">
+                        <button slot="ar-button" id="botonAr" class="btn btn-ar">
+                            <i class="fas fa-cube me-2"></i>Ver en tu mesa
+                        </button>
+                        <div slot="progress-bar"></div>
+                    </model-viewer>
+                    <div class="card-body pt-2">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <h2 id="nombreProducto" class="h4 mb-0">Cargando…</h2>
+                                <small id="categoriaProducto" class="text-muted"></small>
+                            </div>
+                            <div class="text-end">
+                                <div id="precioProducto" class="precio"></div>
+                                <span id="disponibilidadProducto" class="badge"></span>
+                            </div>
+                        </div>
+                        <p id="ayudaAr" class="small text-muted mt-2 mb-0">
+                            <i class="fas fa-hand-pointer me-1"></i>Gira con un dedo y acerca con dos.
+                            <span id="textoAr">Abre esta página en tu celular y toca <strong>Ver en tu mesa</strong> para verlo
+                                a tamaño real.</span>
+                        </p>
                     </div>
-                    <div class="text-end">
-                        <div id="precioProducto" class="precio"></div>
-                        <span id="disponibilidadProducto" class="badge"></span>
-                    </div>
+                </section>
+
+                <!-- filtros por categoria -->
+                <div id="filtros" class="d-flex flex-wrap gap-2 mb-3">
+                    <button class="btn btn-sm btn-filtro activo" data-categoria="">Todos</button>
                 </div>
-                <p id="ayudaAr" class="small text-muted mt-2 mb-0">
-                    <i class="fas fa-hand-pointer me-1"></i>Gira con un dedo y acerca con dos.
-                    <span id="textoAr">Abre esta página en tu celular y toca <strong>Ver en tu mesa</strong> para verlo
-                        a tamaño real.</span>
-                </p>
+
+                <!-- lista de productos -->
+                <div id="lista" class="row g-2"></div>
+                <p id="sinProductos" class="text-center text-muted py-4" hidden>No hay productos disponibles en este momento.</p>
             </div>
-        </section>
 
-        <!-- filtros por categoria -->
-        <div id="filtros" class="d-flex flex-wrap gap-2 mb-3">
-            <button class="btn btn-sm btn-filtro activo" data-categoria="">Todos</button>
+            <aside class="col-lg-3" th:if="${paginaInicio}">
+                <section class="tarjeta-qr card shadow-sm text-center p-3">
+                    <h2 class="h5">Catálogo en tu celular</h2>
+                    <p class="small text-muted mb-2">Escanea el código para abrir este catálogo.</p>
+                    <img class="img-fluid mx-auto" th:src="@{/catalogo/qr.png}" alt="Código QR del catálogo">
+                    <a class="btn btn-sm btn-filtro mt-3" th:href="@{/catalogo/qr}" target="_blank">
+                        <i class="fas fa-print me-1"></i>Imprimir QR
+                    </a>
+                </section>
+            </aside>
         </div>
-
-        <!-- lista de productos -->
-        <div id="lista" class="row g-2"></div>
-        <p id="sinProductos" class="text-center text-muted py-4" hidden>No hay productos disponibles en este momento.</p>
     </main>
 
     <footer class="text-center small text-muted pb-4">
@@ -68,6 +93,7 @@
     </footer>
 
     <script th:src="@{/js/catalogo.js}"></script>
+    <div th:replace="~{componentes/asistente-flotante :: widget}"></div>
 </body>
 
 </html>

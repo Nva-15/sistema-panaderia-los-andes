@@ -1,0 +1,30 @@
+<div id="asistenteFlotante" class="asistente-flotante" sec:authorize="isAuthenticated()"
+    th:fragment="widget" xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <section id="panelAsistenteFlotante" class="panel-asistente-flotante" aria-label="Asistente virtual" hidden>
+        <header class="cabecera-asistente-flotante">
+            <div>
+                <strong><i class="fas fa-robot me-2"></i>Pandito</strong>
+                <small>Asistente virtual</small>
+            </div>
+            <button type="button" class="cerrar-asistente-flotante" aria-label="Cerrar asistente">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </header>
+        <div class="conversacion-asistente-flotante" aria-live="polite">
+            <p class="mensaje-asistente-flotante respuesta">¡Hola! ¿En qué puedo ayudarte?</p>
+        </div>
+        <form class="form-asistente-flotante">
+            <input class="entrada-asistente-flotante" type="text" maxlength="500" autocomplete="off"
+                placeholder="Escribe tu pregunta..." aria-label="Pregunta para el asistente" required>
+            <button class="enviar-asistente-flotante" type="submit" aria-label="Enviar pregunta">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </section>
+    <button class="boton-asistente-flotante" type="button" aria-label="Abrir asistente virtual"
+        aria-expanded="false" aria-controls="panelAsistenteFlotante">
+        <i class="fas fa-robot"></i>
+    </button>
+    <script th:src="@{/js/asistente-flotante.js}" defer></script>
+</div>

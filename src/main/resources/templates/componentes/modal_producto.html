@@ -1,0 +1,46 @@
+<div th:fragment="editorProducto" class="modal fade" id="modalEditarProducto" tabindex="-1"
+    aria-labelledby="modalEditarProductoTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="formEditarProducto">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="modalEditarProductoTitulo">Actualizar producto</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="nombreEditar">Nombre</label>
+                        <input type="text" class="form-control" id="nombreEditar" required maxlength="255">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="categoriaEditar">Categoría</label>
+                            <select class="form-select" id="categoriaEditar" required>
+                                <option value="">Selecciona una categoría</option>
+                                <option th:each="categoria : ${categorias}" th:value="${categoria.id}"
+                                    th:text="${categoria.nombre}"></option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="stockEditar">Stock</label>
+                            <input type="number" class="form-control" id="stockEditar" min="0" step="1" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="precioEditar">Precio (S/)</label>
+                            <input type="number" class="form-control" id="precioEditar" min="0" step="0.01" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="unidadEditar">Unidad</label>
+                            <input type="text" class="form-control" id="unidadEditar" required maxlength="100">
+                        </div>
+                    </div>
+                    <div id="errorEdicionProducto" class="alert alert-danger mt-3 mb-0" role="alert" hidden></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-contorno" data-bs-dismiss="modal">Cancelar</button>
+                    <button id="btnGuardarProducto" type="submit" class="btn btn-marca">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -34,6 +34,14 @@ Ejemplo de telemetría:
  "bandeja_unidades":53,"puerta_abierta":false,"clientes_acumulados":4,"wifi_rssi":-58,"uptime_s":120}
 ```
 
+## Arquitectura híbrida y continuidad del monitoreo
+
+- **Wokwi es una fuente opcional de demostración**, no el servidor del monitoreo. Al iniciar la simulación, el ESP32 simulado publica por MQTT.
+- **Spring Boot es el consumidor y monitor**: mantiene su conexión al broker, escucha telemetría, alertas y el estado retenido del dispositivo, y guarda las lecturas y alertas en la base de datos configurada.
+- **La base de datos conserva el historial** aunque se cierre Wokwi o se reinicie Spring Boot. El dashboard muestra la última lectura guardada y la hora en que llegó; marca el ESP32 desconectado si recibe el estado `offline` o si no llegan lecturas nuevas durante un minuto.
+- **Al cerrar Wokwi no se inventan mediciones**: el dashboard conserva los últimos valores como referencia y advierte que son datos antiguos. No hay lecturas nuevas hasta que se inicie Wokwi u otra fuente compatible, como un ESP32 físico publicando en los mismos tópicos.
+- Para recibir mensajes de forma continua, Spring Boot debe ejecutarse en un alojamiento que no suspenda el proceso. En el plan gratuito de Render el servicio puede dormir cuando no recibe visitas HTTP; mientras está dormido no puede consumir MQTT. Para monitoreo continuo, usa un plan siempre activo o un servidor que permanezca encendido.
+
 ## Cómo ver los datos en el sistema
 
 1. Iniciar la simulación en Wokwi (botón ▶).

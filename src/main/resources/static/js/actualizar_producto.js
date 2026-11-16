@@ -1,81 +1,59 @@
 document.addEventListener('DOMContentLoaded', function () {
-    let dataProductos = [];
-    let idProducto = "";
+    let idProducto = null;
+    const nombreProducto = document.getElementById('nombreEditar');
+    const stockProducto = document.getElementById('stockEditar');
+    const precioProducto = document.getElementById('precioEditar');
+    const unidadProducto = document.getElementById('unidadEditar');
+    const categoriaProducto = document.getElementById('categoriaEditar');
+    const formulario = document.getElementById('formEditarProducto');
+    const botonGuardar = document.getElementById('btnGuardarProducto');
+    const error = document.getElementById('errorEdicionProducto');
 
-    async function cargarDatosVentas() {
-        try {
-            const response = await fetch("/productos/dataProductos");
-            dataProductos = await response.json();
-            console.log(dataProductos) // Simplificado
-        } catch (error) {
-            console.error("Error al cargar datos:", error);
-        }
-    }
-
-    //datos del formulario
-    const nombreProducto = document.getElementById("nombreEditar");
-    const stockEditar = document.getElementById("stockEditar");
-    const botonesEditar = document.querySelectorAll(".botonEditar")
-    const btnGuardar = document.getElementById("btnGuardar");
-
-    //al guardar el modal
-    btnGuardar.addEventListener('click', guardarCambios);
-
-    // Función para manejar el clic
-    function manejarClickEditar(event) {
-        const boton = event.currentTarget;
-        idProducto = boton.getAttribute('data-id');
-        console.log("ID usuario:", idProducto);
-
-        // Aquí puedes cargar los datos del usuario en el modal
-        const  producto = dataProductos.find(u => u.id == idProducto);
-        console.log("Usuario encontrado:", producto);
-        if (producto!=null) {
-            nombreProducto.value = producto.nombre || '';
-            stockEditar.value = parseInt(producto.cantidad) || '';
-
-        }
-    }
-
-    // Cargar datos y configurar eventos
-    cargarDatosVentas().then(() => {
-        console.log("Datos cargados:", dataProductos);
-
-        // Configurar event listeners para TODOS los botones de editar
-        botonesEditar.forEach(boton => {
-            boton.addEventListener('click', manejarClickEditar);
+    document.querySelectorAll('.botonEditar').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            idProducto = boton.dataset.id;
+            nombreProducto.value = boton.dataset.nombre || '';
+            stockProducto.value = boton.dataset.cantidad || '';
+            precioProducto.value = boton.dataset.precio || '';
+            unidadProducto.value = boton.dataset.unidad || '';
+            categoriaProducto.value = boton.dataset.categoriaId || '';
+            error.hidden = true;
+            error.textContent = '';
         });
     });
 
-    function guardarCambios() {
-        const nombre = nombreProducto.value.trim();
-        const stock = stockEditar.value.trim();
+    formulario.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        if (!idProducto || !formulario.reportValidity()) {
+            return;
+        }
 
-        if (!idProducto || !nombre || !stock ) return;
-
-        const id = idProducto;
-
-        const datos = { 
-            id: idProducto,
-            nombre: nombre,
-            cantidad: stock,
-        };
-
-        fetch(`/productos/actualizar/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(datos)
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Cambios guardados correctamente');
-                    location.reload(); // Recargar la página
-                }
+        botonGuardar.disabled = true;
+        error.hidden = true;
+        try {
+            const response = await fetch('/productos/actualizar/' + encodeURIComponent(idProducto), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: nombreProducto.value.trim(),
+                    cantidad: Number(stockProducto.value),
+                    precio: Number(precioProducto.value),
+                    unidad: unidadProducto.value.trim(),
+                    categoriaId: Number(categoriaProducto.value)
+                })
             });
-    }
 
+            if (!response.ok) {
+                const detalle = await response.text();
+                throw new Error(detalle || 'No se pudo actualizar el producto.');
+            }
+
+            window.location.reload();
+        } catch (e) {
+            error.textContent = e.message || 'No se pudo actualizar el producto.';
+            error.hidden = false;
+        } finally {
+            botonGuardar.disabled = false;
+        }
+    });
 });
-
-

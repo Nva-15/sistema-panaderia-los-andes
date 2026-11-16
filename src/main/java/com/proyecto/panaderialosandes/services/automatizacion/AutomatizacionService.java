@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -138,7 +139,7 @@ public class AutomatizacionService {
     }
 
     // ---------- Eventos en tiempo real ----------
-    @EventListener
+    @TransactionalEventListener
     public void alStockBajo(EventosNegocio.StockBajo evento) {
         String texto = evento.stockActual() <= 0
                 ? "❌ Producto AGOTADO: " + evento.producto() + ". Reponer pronto."

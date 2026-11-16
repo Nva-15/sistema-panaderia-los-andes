@@ -18,18 +18,22 @@ public class ReporteVentaService {
                                            Long categoriaId, Long usuarioId, Long clienteId) {
         
         String sql = "SELECT " +
+                     "v.id as venta_id, " +
                      "v.fecha as fecha, " +
                      "u.nombre as usuario, " +
+                     "cl.nombre as cliente, " +
+                     "cl.dni as dni, " +
                      "p.nombre as producto, " +
                      "c.nombre as categoria, " +
                      "dv.cantidad as cantidad, " +
-                     "p.precio as precio, " +
+                     "(dv.subtotal / dv.cantidad) as precio, " +
                      "dv.subtotal as subtotal " +
                      "FROM detalleventas dv " +
-                     "JOIN ventas v ON dv.venta_id = v.id " +
-                     "JOIN usuarios u ON v.usuario_id = u.id " +
-                     "JOIN productos p ON dv.producto_id = p.id " +
-                     "JOIN categorias c ON p.categoria_id = c.id " +
+                     "LEFT JOIN ventas v ON dv.venta_id = v.id " +
+                     "LEFT JOIN usuarios u ON v.usuario_id = u.id " +
+                     "LEFT JOIN clientes cl ON v.cliente_id = cl.id " +
+                     "LEFT JOIN productos p ON dv.producto_id = p.id " +
+                     "LEFT JOIN categorias c ON p.categoria_id = c.id " +
                      "WHERE DATE(v.fecha) BETWEEN :fechaDesde AND :fechaHasta ";
         
         if (categoriaId != null) {

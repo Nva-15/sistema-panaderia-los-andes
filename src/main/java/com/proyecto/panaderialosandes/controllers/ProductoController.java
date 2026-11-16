@@ -26,6 +26,7 @@ import com.proyecto.panaderialosandes.models.Categorias;
 import com.proyecto.panaderialosandes.models.Productos;
 import com.proyecto.panaderialosandes.repositorios.CategoriaRepository;
 import com.proyecto.panaderialosandes.repositorios.ProductoRepository;
+import com.proyecto.panaderialosandes.services.IotService;
 import com.proyecto.panaderialosandes.services.ProductoService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -85,6 +86,7 @@ public class ProductoController {
     public String filtrosdeReporte(@RequestParam() String filtro, Model model) {
 
         List<Productos> productos = productoService.obtenerTodosLosProductos();
+        model.addAttribute("categorias", categoriaRepository.findAll());
         if (filtro.equals("inactivo")) {
             List<Productos> productosInactivos = productos.stream()
                     .filter(p -> p.getEstado().equals("inactivo")) // Filtrar productos agotados
@@ -118,7 +120,7 @@ public class ProductoController {
             model.addAttribute("filtro", filtro);
         }
 
-        LocalDate fechaActual = LocalDate.now();
+        LocalDate fechaActual = LocalDate.now(IotService.ZONA);
         model.addAttribute("fechaActualizacion", fechaActual);
 
         return "vista/reporte_inventario";
@@ -151,23 +153,44 @@ public class ProductoController {
     @PostMapping("/actualizar/{id}")
     @ResponseBody
     public ResponseEntity<String> actualizarProducto(
-            @PathVariable int id, 
-            @RequestBody Productos producto) {
-        try {
-            Optional<Productos> producOptional = productoService.obtenerProductoPorId(id);
-             Productos productoNew = new Productos() ;
-            if (producOptional.isPresent()) {
-                productoNew= producOptional.get();
-                productoNew.setNombre(producto.getNombre());
-                productoNew.setCantidad(producto.getCantidad());
-                productoService.actualizarProducto(productoNew);
-            }
-                
-                return ResponseEntity.ok("Usuario actualizado");
-            
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            @PathVariable int id,
+            @RequestBody ActualizacionProducto solicitud) {
+        if (solicitud.getNombre() == null || solicitud.getNombre().isBlank()
+                || solicitud.getCantidad() == null || solicitud.getCantidad() < 0
+                || solicitud.getPrecio() == null || !Double.isFinite(solicitud.getPrecio())
+                || solicitud.getPrecio() < 0
+                || solicitud.getUnidad() == null || solicitud.getUnidad().isBlank()
+                || solicitud.getCategoriaId() == null) {
+            return ResponseEntity.badRequest().body("Completa los datos del producto con valores válidos");
         }
+
+        Optional<Productos> productoEncontrado = productoService.obtenerProductoPorId(id);
+        if (productoEncontrado.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<Categorias> categoria = categoriaRepository.findById(solicitud.getCategoriaId());
+        if (categoria.isEmpty()) {
+            return ResponseEntity.badRequest().body("La categoría seleccionada no existe");
+        }
+
+        Productos producto = productoEncontrado.get();
+        producto.setNombre(solicitud.getNombre().trim());
+        producto.setCantidad(solicitud.getCantidad());
+        producto.setPrecio(solicitud.getPrecio());
+        producto.setUnidad(solicitud.getUnidad().trim());
+        producto.setCategoria_id(categoria.get());
+        productoService.actualizarProducto(producto);
+        return ResponseEntity.ok("Producto actualizado");
+    }
+
+    @lombok.Data
+    public static class ActualizacionProducto {
+        private String nombre;
+        private Integer cantidad;
+        private Double precio;
+        private String unidad;
+        private Integer categoriaId;
     }
 
 

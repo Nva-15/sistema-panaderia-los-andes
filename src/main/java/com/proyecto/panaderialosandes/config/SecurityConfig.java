@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/principal","/login", "/css/**", "/js/**", "/imagenes/**").permitAll()
+                .requestMatchers("/", "/principal", "/login", "/css/**", "/js/**", "/imagenes/**").permitAll()
                 // catalogo de Realidad Aumentada para clientes (sin sesion): pagina, datos publicos, QR y modelos 3D
                 .requestMatchers("/catalogo", "/catalogo/**", "/api/catalogo", "/modelos/**").permitAll()
                 // entrada HTTP alternativa del ESP32 (sin sesion); el controlador valida la cabecera X-API-KEY

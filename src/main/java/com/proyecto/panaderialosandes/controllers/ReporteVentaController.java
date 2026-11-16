@@ -5,7 +5,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.*;
 
 @RestController
@@ -72,7 +71,7 @@ public class ReporteVentaController {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.TEXT_PLAIN);
             headers.setContentDisposition(ContentDisposition.attachment()
-                    .filename("reporte_ventas_" + LocalDate.now() + ".csv")
+                    .filename("reporte_ventas_" + IotService.ahora().toLocalDate() + ".csv")
                     .build());
             
             return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
@@ -84,16 +83,19 @@ public class ReporteVentaController {
 
     private String generarContenidoCSV(List<Object[]> datos) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Fecha,Usuario,Producto,Categoría,Cantidad,Precio Unitario,Subtotal\n");
+        sb.append("N.º venta,Fecha,Vendedor,Cliente,DNI,Producto,Categoría,Cantidad,Precio Unitario,Subtotal\n");
         
         for (Object[] fila : datos) {
-            sb.append(String.format("\"%s\",", fila[0])); // Fecha
-            sb.append(String.format("\"%s\",", fila[1] != null ? fila[1] : "")); // Usuario
-            sb.append(String.format("\"%s\",", fila[2])); // Producto
-            sb.append(String.format("\"%s\",", fila[3])); // Categoría
-            sb.append(String.format("%d,", fila[4])); // Cantidad
-            sb.append(String.format("%.2f,", fila[5])); // Precio
-            sb.append(String.format("%.2f\n", fila[6])); // Subtotal
+            sb.append(String.format("%d,", fila[0])); // Venta
+            sb.append(String.format("\"%s\",", fila[1])); // Fecha
+            sb.append(String.format("\"%s\",", fila[2] != null ? fila[2] : "")); // Usuario
+            sb.append(String.format("\"%s\",", fila[3])); // Cliente
+            sb.append(String.format("\"%s\",", fila[4])); // DNI
+            sb.append(String.format("\"%s\",", fila[5])); // Producto
+            sb.append(String.format("\"%s\",", fila[6])); // Categoría
+            sb.append(String.format("%d,", fila[7])); // Cantidad
+            sb.append(String.format("%.2f,", fila[8])); // Precio
+            sb.append(String.format("%.2f\n", fila[9])); // Subtotal
         }
         
         return sb.toString();

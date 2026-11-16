@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectHoras = document.getElementById('horas');
     const estadoDispositivo = document.getElementById('estadoDispositivo');
     const ultimaLectura = document.getElementById('ultimaLectura');
+    const avisoDesconectado = document.getElementById('avisoDesconectado');
     const contadorAlertas = document.getElementById('contadorAlertas');
 
     const estadoMqtt = document.getElementById('estadoMqtt');
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         estadoMqtt.className = 'badge ' + (datos.mqttConectado ? 'bg-success' : 'bg-secondary');
         estadoMqtt.textContent = datos.mqttConectado ? 'MQTT conectado' : 'MQTT sin conexión';
         ultimaLectura.textContent = datos.ultimaLectura || 'sin lecturas';
+        avisoDesconectado.hidden = datos.ultimaLectura == null || datos.enLinea;
         if (datos.ultimaLectura == null) {
             estadoDispositivo.className = 'badge bg-secondary';
             estadoDispositivo.textContent = 'Sin datos';

@@ -24,8 +24,15 @@ public class CatalogoController {
         this.catalogoService = catalogoService;
     }
 
+    @GetMapping("/")
+    public String inicio(Model model) {
+        model.addAttribute("paginaInicio", true);
+        return "vista/catalogo";
+    }
+
     @GetMapping("/catalogo") // pagina publica que abre el cliente al escanear el QR
-    public String catalogo() {
+    public String catalogo(Model model) {
+        model.addAttribute("paginaInicio", false);
         return "vista/catalogo";
     }
 

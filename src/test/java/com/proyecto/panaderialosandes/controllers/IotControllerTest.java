@@ -119,6 +119,9 @@ class IotControllerTest {
         mqtt.messageArrived("losandes/utpgrupo03/estado", new MqttMessage("offline".getBytes(StandardCharsets.UTF_8)));
         mockMvc.perform(get("/api/iot/estado").with(user("admin").roles("ADMIN")))
                 .andExpect(jsonPath("$.enLinea").value(false));
+        mockMvc.perform(get("/api/iot/estado").with(user("admin").roles("ADMIN")))
+                .andExpect(jsonPath("$.ultimaLectura").isNotEmpty())
+                .andExpect(jsonPath("$.variables[?(@.clave=='vitrina_temp_c')].valor").value(27.3));
         // al volver a publicar, queda en linea otra vez
         mqtt.messageArrived("losandes/utpgrupo03/estado", new MqttMessage("online".getBytes(StandardCharsets.UTF_8)));
         mqtt.messageArrived("losandes/utpgrupo03/telemetria", new MqttMessage(TELEMETRIA.getBytes(StandardCharsets.UTF_8)));

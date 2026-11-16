@@ -32,7 +32,8 @@
         <div class="encabezado">
             <div>
                 <h1>¡Hola, <span th:text="${session.usuarioActual?.nombre ?: 'bienvenido'}">Neiser</span>! 🥐</h1>
-                <p><span th:text="${panel.fecha}">Viernes 31 de octubre</span> · así va la panadería hoy</p>
+                <p><span th:text="${panel.fecha}">Viernes 31 de octubre</span> ·
+                    <span th:text="${panel.hora}">12:00</span> (hora de Perú) · así va la panadería hoy</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <a class="btn btn-contorno" th:href="@{/principal/asistente}"><i class="fas fa-robot me-2"></i>Preguntar al asistente</a>
@@ -132,13 +133,16 @@
             </div>
 
             <!-- mas vendidos (solo ADMIN) -->
-            <div class="col-12 col-md-6 col-xl-4" sec:authorize="hasRole('ADMIN')">
+            <div class="col-12 col-md-6 col-xl-4">
                 <div class="tarjeta h-100">
-                    <div class="tarjeta-cabecera"><h2>Más vendidos hoy</h2></div>
+                    <div class="tarjeta-cabecera"><h2>Productos vendidos hoy</h2></div>
                     <div class="tarjeta-cuerpo">
                         <div th:each="p, i : ${panel.masVendidos}">
                             <div class="d-flex justify-content-between mb-1"><span class="fw-bold" th:text="${p.producto}"></span>
-                                <span class="leyenda" th:text="${p.unidades + ' u. · S/ ' + #numbers.formatDecimal(p.monto_soles, 1, 2)}"></span></div>
+                                <span class="leyenda">
+                                    <span th:text="${p.unidades + ' u.'}"></span>
+                                    <span sec:authorize="hasRole('ADMIN')" th:text="${' · S/ ' + #numbers.formatDecimal(p.monto_soles, 1, 2)}"></span>
+                                </span></div>
                             <div class="barra-stock w-100 mb-3"><span th:style="'width:' + ${p.unidades * 100 / panel.masVendidos[0].unidades} + '%;background:var(--cafe)'"></span></div>
                         </div>
                         <div class="vacio" th:if="${#lists.isEmpty(panel.masVendidos)}"><i class="fas fa-basket-shopping"></i>Todavía no hay ventas hoy</div>

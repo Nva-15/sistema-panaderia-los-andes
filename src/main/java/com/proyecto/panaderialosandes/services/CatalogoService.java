@@ -65,6 +65,9 @@ public class CatalogoService {
             return "torta_tres_leches";
         }
         if (c.contains("pan") || n.contains("pan")) {
+            if (n.contains("chapla")) {
+                return "pan_chapla";
+            }
             return "pan_frances";
         }
         return "pastel";

@@ -41,7 +41,7 @@ Proyecto integrador del curso **Herramientas de Desarrollo Profesional TIC**.
 docker compose up --build
 ```
 
-Abrir http://localhost:8081 e ingresar con usuario `admin` y contraseña `Admin123!` (se crea automáticamente la primera vez).
+Abrir http://localhost:8081 para ver el catálogo público. Para entrar al sistema, pulsar **Iniciar sesión** e ingresar con usuario `admin` y contraseña `Admin123!` (se crea automáticamente la primera vez).
 
 ### Opción 2: GitHub Codespaces (en la nube, desde el navegador)
 

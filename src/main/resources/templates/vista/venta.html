@@ -52,7 +52,7 @@
                                 <input type="number" id="cantidad" class="form-control" min="1" value="1">
                             </div>
                             <div class="col-12 col-md-4">
-                                <button id="agregarProducto" class="btn btn-trigo w-100">
+                                <button id="agregarProducto" type="button" class="btn btn-trigo w-100">
                                     <i class="fas fa-plus me-2"></i>Agregar
                                 </button>
                             </div>
@@ -139,6 +139,83 @@
             </div>
         </div>
     </main>
+
+    <div class="modal fade" id="avisoVentaModal" tabindex="-1"
+         aria-labelledby="avisoVentaTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="avisoVentaTitulo">No se puede registrar la venta</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <i class="fas fa-circle-exclamation me-2"></i>
+                        Agregue al menos un producto a la venta.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-marca" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmacionVentaModal" tabindex="-1"
+         aria-labelledby="confirmacionVentaTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="confirmacionVentaTitulo">Confirmar venta</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="resumenConfirmacion">
+                    <p class="mb-2"><strong>Cliente:</strong> <span id="resumenCliente"></span></p>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumenProductos"></tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">Total</th>
+                                    <th id="resumenTotal" class="text-end"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-body" id="resultadoConfirmacion" hidden>
+                    <div class="alert alert-success mb-0" role="status">
+                        <i class="fas fa-circle-check me-2"></i>
+                        <span id="mensajeVentaRegistrada"></span>
+                    </div>
+                </div>
+                <div class="px-3" id="errorVenta" hidden>
+                    <div class="alert alert-danger mb-0" role="alert"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-contorno" id="cancelarConfirmacion"
+                            data-bs-dismiss="modal">Seguir editando</button>
+                    <button type="button" class="btn btn-marca" id="confirmarVenta">
+                        <i class="fas fa-check me-2"></i>Confirmar y registrar
+                    </button>
+                    <a class="btn btn-contorno" id="verReporteVenta" th:href="@{/principal/reporte_venta}" hidden>
+                        Ver reporte
+                    </a>
+                    <button type="button" class="btn btn-marca" id="nuevaVenta" data-bs-dismiss="modal" hidden>
+                        Nueva venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script th:src="@{/js/venta.js}"></script>
 </body>

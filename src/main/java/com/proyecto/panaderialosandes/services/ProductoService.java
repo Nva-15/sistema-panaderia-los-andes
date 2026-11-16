@@ -28,6 +28,11 @@ public class ProductoService implements ProductoServiceInterface {
     public Optional<Productos> obtenerProductoPorId(int id) {
         return productoRepository.findById(id);
     }
+
+    public Optional<Productos> obtenerProductoParaVenta(int id) {
+        return productoRepository.buscarParaVenta(id);
+    }
+
     public void actualizarProducto(Productos producto) {
         productoRepository.save(producto);
     }

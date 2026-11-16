@@ -13,11 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     let opcionesFiltros = {};
     let filtrosActuales = {};
     
-    // Configurar fechas predeterminadas (últimos 7 días)
+    // Mostrar ventas recientes sin exigir que el usuario pulse "Generar".
     configurarFechasPredeterminadas();
-    
-    // Cargar opciones de filtros al iniciar
-    cargarOpcionesFiltros();
+    cargarOpcionesFiltros().then(generarReporte);
     
     // Evento para generar reporte
     form.addEventListener('submit', function(e) {
@@ -29,18 +27,19 @@ document.addEventListener('DOMContentLoaded', function() {
     btnLimpiar.addEventListener('click', function() {
         form.reset();
         resultados.style.display = 'none';
-        // Restablecer fechas a los últimos 7 días al limpiar
+        // Restablecer fechas a los últimos 30 días al limpiar
         configurarFechasPredeterminadas();
+        generarReporte();
     });
     
     // Evento para exportar datos
     btnExportar.addEventListener('click', exportarCSV);
     
-    // Función para configurar fechas predeterminadas (últimos 7 días)
+    // Función para configurar fechas predeterminadas (últimos 30 días)
     function configurarFechasPredeterminadas() {
         const fechaHasta = new Date();
         const fechaDesde = new Date();
-        fechaDesde.setDate(fechaHasta.getDate() - 7); // Restar 7 días
+        fechaDesde.setDate(fechaHasta.getDate() - 30);
         
         // Formatear fechas como YYYY-MM-DD (formato de input date)
         const formatDate = (date) => {
@@ -176,32 +175,51 @@ document.addEventListener('DOMContentLoaded', function() {
         
         data.forEach(item => {
             const row = document.createElement('tr');
-            
-            // Formatear fecha
-            const fecha = new Date(item[0]);
-            const fechaFormateada = fecha.toLocaleDateString('es-PE');
-            
-            row.innerHTML = `
-                <td>${fechaFormateada}</td>
-                <td>${item[1] || 'N/A'}</td>
-                <td>${item[2]}</td>
-                <td>${item[3]}</td>
-                <td>${item[4]}</td>
-                <td class="text-end">S/ ${parseFloat(item[5]).toFixed(2)}</td>
-                <td class="text-end">S/ ${parseFloat(item[6]).toFixed(2)}</td>
-            `;
+            const fechaFormateada = item[1]
+                ? new Intl.DateTimeFormat('es-PE', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                    timeZone: 'America/Lima'
+                }).format(new Date(item[1]))
+                : '—';
+            const valores = [
+                item[0] || '—',
+                fechaFormateada,
+                item[2] || 'N/A',
+                item[3] || 'N/A',
+                item[4] || '—',
+                item[5] || '—',
+                item[6] || '—',
+                item[7] ?? 0,
+                item[8] == null ? '—' : `S/ ${parseFloat(item[8]).toFixed(2)}`,
+                `S/ ${parseFloat(item[9]).toFixed(2)}`
+            ];
+            valores.forEach((valor, index) => {
+                const cell = document.createElement('td');
+                cell.textContent = valor;
+                if (index >= 8) cell.className = 'text-end';
+                row.appendChild(cell);
+            });
             
             tablaBody.appendChild(row);
-            total += parseFloat(item[6]);
+            total += parseFloat(item[9]);
         });
         
         // Agregar fila de total
         const totalRow = document.createElement('tr');
         totalRow.className = 'table-active';
-        totalRow.innerHTML = `
-            <td colspan="6" class="text-end"><strong>Total:</strong></td>
-            <td class="text-end"><strong>S/ ${total.toFixed(2)}</strong></td>
-        `;
+        const totalLabel = document.createElement('td');
+        totalLabel.colSpan = 9;
+        totalLabel.className = 'text-end';
+        const label = document.createElement('strong');
+        label.textContent = 'Total:';
+        totalLabel.appendChild(label);
+        const totalValue = document.createElement('td');
+        totalValue.className = 'text-end';
+        const amount = document.createElement('strong');
+        amount.textContent = `S/ ${total.toFixed(2)}`;
+        totalValue.appendChild(amount);
+        totalRow.append(totalLabel, totalValue);
         tablaBody.appendChild(totalRow);
         
         resultados.style.display = 'block';
@@ -211,8 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function agruparDatos(data, criterio) {
         const grupos = {};
         const indexMap = {
-            'categoria': 3,
-            'usuario': 1
+            'categoria': 6,
+            'usuario': 2
         };
         
         const index = indexMap[criterio];
@@ -221,22 +239,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const key = item[index] || 'Sin ' + criterio;
             if (!grupos[key]) {
                 grupos[key] = {
-                    count: 0,
-                    subtotal: 0,
-                    firstItem: item
+                    cantidad: 0,
+                    subtotal: 0
                 };
             }
-            grupos[key].count += item[4]; // Cantidad
-            grupos[key].subtotal += item[6]; // Subtotal
+            grupos[key].cantidad += Number(item[7]);
+            grupos[key].subtotal += Number(item[9]);
         });
         
         // Convertir a array para mostrar
         return Object.keys(grupos).map(key => {
             const grupo = grupos[key];
-            const item = [...grupo.firstItem];
-            item[4] = grupo.count;
-            item[6] = grupo.subtotal;
-            return item;
+            return [
+                '',
+                '',
+                criterio === 'usuario' ? key : '—',
+                '—',
+                '—',
+                '—',
+                criterio === 'categoria' ? key : '—',
+                grupo.cantidad,
+                null,
+                grupo.subtotal
+            ];
         });
     }
     
@@ -284,11 +309,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-        errorDiv.innerHTML = `
-            <i class="fas fa-exclamation-circle me-2"></i>
-            ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
+        const icono = document.createElement('i');
+        icono.className = 'fas fa-exclamation-circle me-2';
+        const cerrar = document.createElement('button');
+        cerrar.type = 'button';
+        cerrar.className = 'btn-close';
+        cerrar.dataset.bsDismiss = 'alert';
+        cerrar.setAttribute('aria-label', 'Cerrar');
+        errorDiv.append(icono, document.createTextNode(mensaje), cerrar);
         
         alertContainer.appendChild(errorDiv);
         

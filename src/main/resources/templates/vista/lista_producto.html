@@ -50,6 +50,7 @@
                             <th>Stock</th>
                             <th class="text-end">Precio</th>
                             <th>Unidad</th>
+                            <th class="text-center" sec:authorize="hasRole('ADMIN')">Editar</th>
                         </tr>
                     </thead>
                     <tbody id="tablaProductos">
@@ -71,6 +72,14 @@
                             </td>
                             <td class="text-end fw-bold" th:text="${'S/ ' + #numbers.formatDecimal(producto.precio, 1, 'COMMA', 2, 'POINT')}"></td>
                             <td th:text="${producto.unidad}"></td>
+                            <td class="text-center" sec:authorize="hasRole('ADMIN')">
+                                <button type="button" class="btn btn-icono botonEditar"
+                                    data-bs-toggle="modal" data-bs-target="#modalEditarProducto"
+                                    th:attr="data-id=${producto.id},data-nombre=${producto.nombre},data-cantidad=${producto.cantidad},data-precio=${producto.precio},data-unidad=${producto.unidad},data-categoria-id=${producto.categoria_id?.id}"
+                                    title="Editar producto" aria-label="Editar producto">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -81,6 +90,8 @@
         </div>
     </main>
 
+    <div th:replace="~{componentes/modal_producto :: editorProducto}"></div>
+    <script th:src="@{/js/actualizar_producto.js}"></script>
     <script>
         (function () {
             const filas = Array.from(document.querySelectorAll('#tablaProductos tr'));

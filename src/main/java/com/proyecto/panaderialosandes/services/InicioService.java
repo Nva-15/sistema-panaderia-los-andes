@@ -1,7 +1,9 @@
 package com.proyecto.panaderialosandes.services;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.TextStyle;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +20,7 @@ import com.proyecto.panaderialosandes.repositorios.VentaRepository;
 public class InicioService {
 
     private static final Locale ES = Locale.forLanguageTag("es-PE");
+    private static final DateTimeFormatter FORMATO_HORA = DateTimeFormatter.ofPattern("HH:mm");
 
     private final HerramientasAsistente herramientas;
     private final IotService iotService;
@@ -30,14 +33,17 @@ public class InicioService {
     }
 
     public Map<String, Object> panel(boolean esAdmin) {
-        LocalDate hoy = IotService.ahora().toLocalDate();
+        LocalDateTime fechaHoraPeru = IotService.ahora();
+        LocalDate hoy = fechaHoraPeru.toLocalDate();
         Map<String, Object> panel = new LinkedHashMap<>();
         panel.put("fecha", capitalizar(hoy.getDayOfWeek().getDisplayName(TextStyle.FULL, ES)) + " "
                 + hoy.getDayOfMonth() + " de " + hoy.getMonth().getDisplayName(TextStyle.FULL, ES));
+        panel.put("hora", fechaHoraPeru.format(FORMATO_HORA));
 
         Map<String, Object> ventasHoy = herramientas.consultarVentas(hoy.toString(), hoy.toString(), null);
         panel.put("unidadesHoy", ventasHoy.get("unidades_vendidas"));
         panel.put("ventasRegistradas", ventaRepository.contarDelDia(hoy.toString()));
+        panel.put("masVendidos", ((List<?>) ventasHoy.get("por_producto")).stream().limit(5).toList());
 
         if (esAdmin) {
             double totalHoy = (double) ventasHoy.get("total_soles");
@@ -46,7 +52,6 @@ public class InicioService {
             panel.put("totalHoy", totalHoy);
             panel.put("variacion", totalSemanaPasada > 0 ? Math.round((totalHoy - totalSemanaPasada) / totalSemanaPasada * 100) : null);
             panel.put("diaSemanaPasada", hoy.getDayOfWeek().getDisplayName(TextStyle.FULL, ES));
-            panel.put("masVendidos", ((List<?>) ventasHoy.get("por_producto")).stream().limit(5).toList());
             panel.put("grafico", graficoSieteDias(hoy));
         }
 

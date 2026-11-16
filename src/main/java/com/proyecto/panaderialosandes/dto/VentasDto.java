@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class VentasDto {
 
     private ReferenciaIdDto cliente_id;
+    private ClienteDto cliente;
     private List<DetalleVentaDto> detalles;
     private double total;
 }

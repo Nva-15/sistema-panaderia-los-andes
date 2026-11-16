@@ -29,7 +29,12 @@
                 </select>
             </div>
         </div>
-        <p class="leyenda mb-3">Última lectura: <span id="ultimaLectura">—</span> · se actualiza cada 10 segundos</p>
+        <p class="leyenda mb-3">
+            Última lectura: <span id="ultimaLectura">—</span> · se actualiza cada 10 segundos
+            <span id="avisoDesconectado" class="text-danger fw-bold ms-1" hidden>
+                · Sin datos nuevos; se muestran las últimas lecturas guardadas.
+            </span>
+        </p>
 
         <!-- tarjetas con el ultimo valor de cada sensor -->
         <div id="tarjetas" class="row g-3 mb-4"></div>

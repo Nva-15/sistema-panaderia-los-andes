@@ -46,7 +46,7 @@ public class HomeController {
 
     @GetMapping // localhost:8081/principal
     public String home() {
-        return "vista/inicio";
+        return "redirect:/catalogo";
     }
 
     @GetMapping("/inicio") // localhost:8081/principal/inicio
@@ -65,6 +65,7 @@ public class HomeController {
     @GetMapping("/productos") // localhost:8081/principal/productos
     public String mostrarProductos(Model model) {
         model.addAttribute("productos", productoService.obtenerTodosLosProductos());
+        model.addAttribute("categorias", categoriaService.buscartodos());
         return "vista/lista_producto";
     }
 
